@@ -51,6 +51,11 @@ public class Dialog {
         dialog.show();
     }
 
+
+}
+
+
+
 //    public void setDialogSettings(android.app.Dialog dialog) {
 //        dialog.setContentView(R.layout.dialog_layout);
 //        Button dialogSubmitBtn =dialog.findViewById(R.id.DialogSubmitBtn);
@@ -69,4 +74,3 @@ public class Dialog {
 //        });
 //        dialog.show();
 //    }
-}

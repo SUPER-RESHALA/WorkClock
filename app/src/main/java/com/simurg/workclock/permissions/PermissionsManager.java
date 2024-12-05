@@ -8,13 +8,6 @@ import android.util.Log;
 import androidx.core.app.ActivityCompat;
 
 public class PermissionsManager {
-//    public static final int REQUEST_WRITE_EXTERNAL_STORAGE = 1;
-//    public static final int REQUEST_READ_EXTERNAL_STORAGE=2;
-//    public static final int REQUEST_CHANGE_WIFI_STATE=3;
-//    public static final int REQUEST_ACCESS_WIFI_STATE=4;
-//    public static final int REQUEST_ACCESS_NETWORK_STATE=5;
-//    public static final int REQUEST_INTERNET=6;
-//    public static final int REQUEST_CODE_PERNISSIONS=7;
     private static final String[] allPermissions= new String[]{
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE,

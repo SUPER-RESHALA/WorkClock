@@ -44,6 +44,7 @@ dependencies {
    // implementation libs.timber
     //implementation libs.permissionsdispatcher
     //annotationProcessor libs.permissionsdispatcher.processor
+    implementation libs.commons.net
     implementation libs.appcompat
     implementation libs.material
     implementation libs.activity

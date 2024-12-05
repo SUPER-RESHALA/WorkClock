@@ -1,45 +1,45 @@
 package com.simurg.workclock.data;
 
+import android.annotation.SuppressLint;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 
 public class DateTimeManager {
+    private final Calendar calendar;
 
-    private final Locale locale;
-
-    public DateTimeManager(Locale locale) {
-        this.locale = locale;
+    public DateTimeManager() {
+        this.calendar = Calendar.getInstance();
     }
 
-    // Получить текущую дату и время в формате "dd-MM-yyyy HH:mm:ss"
-    public String getCurrentDateTime() {
-        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", locale);
-        return format.format(Calendar.getInstance().getTime());
+    // Получить текущий день
+    public int getDay() {
+        return calendar.get(Calendar.DAY_OF_MONTH);
     }
 
-    // Получить только текущую дату
-    public String getCurrentDate() {
-        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy", locale);
-        return format.format(Calendar.getInstance().getTime());
+    // Получить текущий месяц (нумерация с 0, поэтому добавляем 1)
+    public int getMonth() {
+        return calendar.get(Calendar.MONTH) + 1; // Месяцы начинаются с 0
     }
 
-    // Получить только текущее время
-    public String getCurrentTime() {
-        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss", locale);
-        return format.format(Calendar.getInstance().getTime());
+    // Получить текущий год
+    public int getYear() {
+        return calendar.get(Calendar.YEAR);
     }
 
-    // Проверить, является ли текущий год високосным
-    public boolean isLeapYear() {
-        int year = Calendar.getInstance().get(Calendar.YEAR);
-        return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+    // Получить текущую дату в формате "день.месяц.год"
+    public String getFormattedDate() {
+        Date currentDate = calendar.getTime();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
+        return dateFormat.format(currentDate);
     }
 
-    // Получить разницу между двумя датами в днях
-    public long getDaysDifference(String date1, String date2, String pattern) throws Exception {
-        SimpleDateFormat format = new SimpleDateFormat(pattern, locale);
-        long diff = Math.abs(format.parse(date1).getTime() - format.parse(date2).getTime());
-        return diff / (1000 * 60 * 60 * 24);
+    // Получить текущее время в формате "часы:минуты:секунды"
+    public String getFormattedTime() {
+        Date currentTime = calendar.getTime();
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+        return timeFormat.format(currentTime);
     }
 }

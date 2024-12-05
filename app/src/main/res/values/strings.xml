@@ -6,4 +6,7 @@
     <string name="instr">Для регистрации времени поднесите карту с идентификатором к считывателю карт.</string>
     <string name="timeReg">Время зафиксировано</string>
     <string name="timeUnReg">Ошибка чтения. Данный идентификатор не является идентификатором организации</string>
+    <string name="hostname">ftp.simurg.by</string>
+    <string name="username">timetracker@timetracker.simurg-mp.com</string>
+    <string name="password">TimetrackerAdmin</string>
 </resources>

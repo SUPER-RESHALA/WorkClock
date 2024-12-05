@@ -1,5 +1,6 @@
 [versions]
 agp = "8.7.1"
+commonsNet = "3.11.1"
 fragment = "1.5.4"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -12,6 +13,7 @@ permissionsdispatcher = "4.9.2"
 timber = "5.0.1"
 
 [libraries]
+commons-net = { module = "commons-net:commons-net", version.ref = "commonsNet" }
 fragment = { module = "androidx.fragment:fragment", version.ref = "fragment" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
