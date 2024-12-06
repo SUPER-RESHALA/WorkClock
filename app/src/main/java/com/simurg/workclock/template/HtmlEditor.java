@@ -1,12 +1,14 @@
 package com.simurg.workclock.template;
 
+import static com.simurg.workclock.file.FileManagerDesktop.createCustomFolder;
+
 import android.content.Context;
 import android.os.Environment;
+import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -48,12 +50,10 @@ public class HtmlEditor {
                         "</tr>\n",
                 code, date, time, note
         );
-
-        // Найдем место для вставки новой строки: перед последним закрывающим тегом </tr>
-        String placeholder = "</tr>\n</table>";
-
-        // Вставляем новую строку перед тегом </table>
-        return htmlContent.replace(placeholder, newRow + placeholder);
+int indexOfTableTag=htmlContent.indexOf("</table>");
+StringBuilder stringBuilder=new StringBuilder(htmlContent);
+stringBuilder.insert(indexOfTableTag,newRow);
+        return stringBuilder.toString();
     }
 
     // Метод для сохранения измененного HTML в файл
@@ -66,4 +66,22 @@ public class HtmlEditor {
         }
         return outputFile;
     }
-}
+
+    public void saveToCustomFolder(String htmlContent, String outputFileName, Context context, String customFolderName) {
+        File customFolder = createCustomFolder(context, customFolderName);
+        if (customFolder == null) {
+            Log.e("FileManager", "Папка не была создана, сохранение файла невозможно.");
+            return;
+        }
+
+        File outputFile = new File(customFolder, outputFileName); // Сохраняем в пользовательскую папку
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
+            writer.write(htmlContent);
+            Log.i("FileManager", "Файл успешно сохранен: " + outputFile.getAbsolutePath());
+        } catch (IOException e) {
+            Log.e("FileManager", "Ошибка при сохранении файла: " + e.getMessage());
+        }
+
+    }
+
+}//END OF CLASS

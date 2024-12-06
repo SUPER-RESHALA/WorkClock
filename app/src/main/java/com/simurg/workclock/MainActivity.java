@@ -3,15 +3,8 @@ package com.simurg.workclock;
 
 import android.Manifest;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.InputType;
-import android.text.TextWatcher;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
-import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -19,13 +12,12 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.simurg.workclock.Dialog.Dialog;
 import com.simurg.workclock.Dialog.DialogDeviceIdListener;
-import com.simurg.workclock.data.DateTimeManager;
 import com.simurg.workclock.file.FileManagerDesktop;
-import com.simurg.workclock.thread.ThreadManager;
+import com.simurg.workclock.ftp.FTPConnectionManager;
+import com.simurg.workclock.network.NetworkUtils;
+import com.simurg.workclock.template.HtmlEditor;
 
-import java.util.Date;
 import java.util.Map;
 
 //interface X {
@@ -33,19 +25,18 @@ import java.util.Map;
 //}
 
 public class MainActivity extends AppCompatActivity implements DialogDeviceIdListener {
-//    String xyz(Integer a, Date b) {
+    //    String xyz(Integer a, Date b) {
 //        return "asdfasdf" + a + b;
 //    }
     private ActivityResultLauncher<String[]> permissionLauncher;
     private String id;
 
-//    void test(X x) {
+    //    void test(X x) {
 //        System.out.println(x.abc(123, new Date()));
 //    }
 //        test(this::xyz);
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
 
 
         super.onCreate(savedInstanceState);
@@ -72,24 +63,60 @@ public class MainActivity extends AppCompatActivity implements DialogDeviceIdLis
                 }
         );
         requestPermissions();
-        Dialog dialog = new Dialog();
-        dialog.setDeviceIdListener(this);
-        dialog.showDialog(this);
-        ThreadManager threadManager=new ThreadManager();
-        EditText rfidNumber = findViewById(R.id.cardNumRFID);
-        rfidNumber.setFocusable(true);
-        rfidNumber.setFocusableInTouchMode(true);
-        rfidNumber.setInputType(InputType.TYPE_NULL);
-        RFIDHandler.RFIDInputHandler(rfidNumber, this);
-        TextView timeMain = findViewById(R.id.timeMain);
-        TextView dateMain = findViewById(R.id.dateMain);
-        DateTimeManager dateTimeManager = new DateTimeManager();
-        timeMain.setText(dateTimeManager.getFormattedTime());
-        dateMain.setText(dateTimeManager.getFormattedDate());
+//        Dialog dialog = new Dialog();
+//        dialog.setDeviceIdListener(this);
+//        dialog.showDialog(this);
+//        ThreadManager threadManager=new ThreadManager();
+//        EditText rfidNumber = findViewById(R.id.cardNumRFID);
+//        rfidNumber.setFocusable(true);
+//        rfidNumber.setFocusableInTouchMode(true);
+//        rfidNumber.setInputType(InputType.TYPE_NULL);
+//        RFIDHandler.RFIDInputHandler(rfidNumber, this);
+//        TextView timeMain = findViewById(R.id.timeMain);
+//        TextView dateMain = findViewById(R.id.dateMain);
+//       DateTimeManager dateTimeManager = new DateTimeManager();
+//        timeMain.setText(dateTimeManager.getFormattedTime());
+//        dateMain.setText(dateTimeManager.getFormattedDate());
 
 
 
 
+
+
+
+//        FTPConnectionManager ftpConnectionManager=new FTPConnectionManager();
+//        ftpConnectionManager.connect(FTPConnectionManager.hostname);
+//        ftpConnectionManager.login(FTPConnectionManager.user,FTPConnectionManager.password);
+//
+//        ftpConnectionManager.logout();
+//        ftpConnectionManager.disconnect();
+
+        // Выполнение в отдельном потоке
+        new Thread(() -> {
+            FTPConnectionManager ftpConnectionManager = new FTPConnectionManager();
+            try {
+                ftpConnectionManager.connect(FTPConnectionManager.hostname);
+
+                if (ftpConnectionManager.isConnected()) {
+                    ftpConnectionManager.login(FTPConnectionManager.user, FTPConnectionManager.password);
+                    System.out.println("FTP login successful!");
+
+                    // Выполнение операций с сервером
+
+                } else {
+                    System.err.println("Failed to connect to FTP server.");
+                }
+            } catch (Exception e) {
+                e.printStackTrace(); // Для отладки
+            } finally {
+                try {
+                    ftpConnectionManager.logout();
+                    ftpConnectionManager.disconnect();
+                } catch (Exception e) {
+                    System.err.println("Error during logout or disconnect: " + e.getMessage());
+                }
+            }
+        }).start();
 
 
 
@@ -104,11 +131,11 @@ public class MainActivity extends AppCompatActivity implements DialogDeviceIdLis
 
 
     @Override
-    public  void onDeviceIdReceived(String deviceId) {
+    public void onDeviceIdReceived(String deviceId) {
         // Здесь вы получаете DeviceId или его строковое значение
         Log.i("MainActivity", "Полученный DeviceId: " + deviceId);
         FileManagerDesktop.createCustomFolder(this, "WorkClockFiles");
-        FileManagerDesktop.createFile(this, "WorkClockFiles", deviceId+".txt", deviceId);
+        FileManagerDesktop.createFile(this, "WorkClockFiles", deviceId + ".txt", deviceId);
         // WorkClockFiles
 
 

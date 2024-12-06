@@ -13,9 +13,9 @@ public class FTPConnectionManager {
 
     private FTPClient ftpClient;
     private static final String TAG = "FTPConnectionManager";
-    private static final String hostname = "ftp.simurg.by";
-    private static final String user = "timetracker@timetracker.simurg-mp.com";
-    private static final String password = "TimetrackerAdmin";
+    public static final String hostname = "ftp.simurg.by";
+    public static final String user = "timetracker@timetracker.simurg-mp.com";
+    public static final String password = "TimetrackerAdmin";
     public FTPConnectionManager() {
         ftpClient = new FTPClient();
     }
@@ -91,7 +91,7 @@ public class FTPConnectionManager {
     }
 
     private void logInfo(String message) {
-        Log.e(TAG , " [INFO]: " + message);
+        Log.i(TAG , " [INFO]: " + message);
       //  System.out.println(TAG + " [INFO]: " + message);
     }
 
