@@ -31,6 +31,7 @@ public class DateTimeManager {
 
     // Получить текущую дату в формате "день.месяц.год"
     public String getFormattedDate() {
+        calendar.setTimeInMillis(System.currentTimeMillis());  // Обновляем время для даты
         Date currentDate = calendar.getTime();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
         return dateFormat.format(currentDate);
@@ -38,6 +39,7 @@ public class DateTimeManager {
 
     // Получить текущее время в формате "часы:минуты:секунды"
     public String getFormattedTime() {
+        calendar.setTimeInMillis(System.currentTimeMillis());  // Обновляем время для времени
         Date currentTime = calendar.getTime();
         SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
         return timeFormat.format(currentTime);

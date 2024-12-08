@@ -3,8 +3,12 @@ package com.simurg.workclock;
 
 import android.Manifest;
 import android.os.Bundle;
+import android.os.Handler;
+import android.text.InputType;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -12,11 +16,14 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.simurg.workclock.Dialog.Dialog;
 import com.simurg.workclock.Dialog.DialogDeviceIdListener;
+import com.simurg.workclock.data.DateTimeManager;
 import com.simurg.workclock.file.FileManagerDesktop;
 import com.simurg.workclock.ftp.FTPConnectionManager;
 import com.simurg.workclock.network.NetworkUtils;
 import com.simurg.workclock.template.HtmlEditor;
+import com.simurg.workclock.thread.ThreadManager;
 
 import java.util.Map;
 
@@ -30,7 +37,14 @@ public class MainActivity extends AppCompatActivity implements DialogDeviceIdLis
 //    }
     private ActivityResultLauncher<String[]> permissionLauncher;
     private String id;
-
+    private  DateTimeManager dateTimeManager;
+    private TextView timeMain;
+    private TextView dateMain;
+private  EditText rfidNumber;
+   private Dialog dialog;
+    private ThreadManager threadManager;
+    private Handler handler;
+    private Runnable timeUpdater;
     //    void test(X x) {
 //        System.out.println(x.abc(123, new Date()));
 //    }
@@ -63,61 +77,26 @@ public class MainActivity extends AppCompatActivity implements DialogDeviceIdLis
                 }
         );
         requestPermissions();
-//        Dialog dialog = new Dialog();
-//        dialog.setDeviceIdListener(this);
-//        dialog.showDialog(this);
-//        ThreadManager threadManager=new ThreadManager();
-//        EditText rfidNumber = findViewById(R.id.cardNumRFID);
-//        rfidNumber.setFocusable(true);
-//        rfidNumber.setFocusableInTouchMode(true);
-//        rfidNumber.setInputType(InputType.TYPE_NULL);
-//        RFIDHandler.RFIDInputHandler(rfidNumber, this);
-//        TextView timeMain = findViewById(R.id.timeMain);
-//        TextView dateMain = findViewById(R.id.dateMain);
-//       DateTimeManager dateTimeManager = new DateTimeManager();
-//        timeMain.setText(dateTimeManager.getFormattedTime());
-//        dateMain.setText(dateTimeManager.getFormattedDate());
+        dialog = new Dialog();
+        dialog.setDeviceIdListener(this);
+        dialog.showDialog(this);
+        threadManager=new ThreadManager();
+        rfidNumber = findViewById(R.id.cardNumRFID);
+        rfidNumber.setFocusable(true);
+        rfidNumber.setFocusableInTouchMode(true);
+        rfidNumber.setInputType(InputType.TYPE_NULL);
+        RFIDHandler.RFIDInputHandler(rfidNumber, this);
+         timeMain = findViewById(R.id.timeMain);
+         dateMain = findViewById(R.id.dateMain);
+        dateTimeManager = new DateTimeManager();
+      timeMain.setText(dateTimeManager.getFormattedTime());
+       dateMain.setText(dateTimeManager.getFormattedDate());
 
 
+        handler = new Handler();
 
-
-
-
-
-//        FTPConnectionManager ftpConnectionManager=new FTPConnectionManager();
-//        ftpConnectionManager.connect(FTPConnectionManager.hostname);
-//        ftpConnectionManager.login(FTPConnectionManager.user,FTPConnectionManager.password);
-//
-//        ftpConnectionManager.logout();
-//        ftpConnectionManager.disconnect();
-
-        // Выполнение в отдельном потоке
-        new Thread(() -> {
-            FTPConnectionManager ftpConnectionManager = new FTPConnectionManager();
-            try {
-                ftpConnectionManager.connect(FTPConnectionManager.hostname);
-
-                if (ftpConnectionManager.isConnected()) {
-                    ftpConnectionManager.login(FTPConnectionManager.user, FTPConnectionManager.password);
-                    System.out.println("FTP login successful!");
-
-                    // Выполнение операций с сервером
-
-                } else {
-                    System.err.println("Failed to connect to FTP server.");
-                }
-            } catch (Exception e) {
-                e.printStackTrace(); // Для отладки
-            } finally {
-                try {
-                    ftpConnectionManager.logout();
-                    ftpConnectionManager.disconnect();
-                } catch (Exception e) {
-                    System.err.println("Error during logout or disconnect: " + e.getMessage());
-                }
-            }
-        }).start();
-
+        // Запускаем обновление времени каждую секунду
+        startUpdatingTime();
 
 
         System.out.println("TEST1");
@@ -128,6 +107,43 @@ public class MainActivity extends AppCompatActivity implements DialogDeviceIdLis
 
 
     }
+
+
+
+
+
+
+    private void startUpdatingTime() {
+        timeUpdater = new Runnable() {
+            @Override
+            public void run() {
+                // Обновляем время каждую секунду
+                timeMain.setText(dateTimeManager.getFormattedTime());
+
+                // Обновляем дату, если она изменилась (ежедневно)
+                String currentDate = dateTimeManager.getFormattedDate();
+                if (!dateMain.getText().toString().equals(currentDate)) {
+                    dateMain.setText(currentDate);
+                }
+
+                // Перезапуск через 1 секунду для времени
+                handler.postDelayed(this, 1000);
+            }
+        };
+
+        // Запуск обновления
+        handler.post(timeUpdater);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Останавливаем обновление времени, когда активность уничтожена
+        if (handler != null && timeUpdater != null) {
+            handler.removeCallbacks(timeUpdater);
+        }
+    }
+
 
 
     @Override

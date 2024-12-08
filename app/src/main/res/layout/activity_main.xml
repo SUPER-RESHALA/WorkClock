@@ -24,7 +24,7 @@
         android:layout_marginBottom="422dp"
         android:gravity="center"
         android:textSize="30sp"
-        android:text="TextView" />
+        android:text="00:00:00" />
 
     <TextView
         android:id="@+id/dateMain"
@@ -36,7 +36,7 @@
         android:layout_marginBottom="285dp"
         android:gravity="center"
          android:textSize="30sp"
-        android:text="TextView" />
+        android:text="01.01.2024" />
 
     <TextView
         android:id="@+id/instructor"

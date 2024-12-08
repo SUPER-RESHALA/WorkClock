@@ -12,7 +12,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 public class HtmlEditor {
 
     private final Context context;
@@ -39,7 +42,7 @@ public class HtmlEditor {
     }
 
     // Метод для добавления данных в HTML
-    public String addNewRowToHtml(String htmlContent, String code, String date, String time, String note) {
+    public String addNewRowToHtml(String finalContent, String code, String date, String time, String note) {
         // Формируем строку, которую добавим в таблицу
         String newRow = String.format(
                 "<tr>\n" +
@@ -50,11 +53,62 @@ public class HtmlEditor {
                         "</tr>\n",
                 code, date, time, note
         );
-int indexOfTableTag=htmlContent.indexOf("</table>");
-StringBuilder stringBuilder=new StringBuilder(htmlContent);
+int indexOfTableTag=finalContent.indexOf("</table>");
+StringBuilder stringBuilder=new StringBuilder(finalContent);
 stringBuilder.insert(indexOfTableTag,newRow);
         return stringBuilder.toString();
     }
+    public static String addNewRowToHtml(String finalContent,String rowsToAdd) {
+        // Формируем строку, которую добавим в таблицу
+
+        int indexOfTableTag=finalContent.indexOf("</table>");
+        StringBuilder stringBuilder=new StringBuilder(finalContent);
+        stringBuilder.insert(indexOfTableTag,rowsToAdd);
+        return stringBuilder.toString();
+    }
+
+
+    public static String extractDataRowsFromFile(File htmlFile) throws IOException {
+        StringBuilder dataRows = new StringBuilder();
+
+        // Парсинг HTML-файла
+        Document document = Jsoup.parse(htmlFile, "UTF-8");
+
+        // Поиск таблицы с данными
+        Element table = document.selectFirst("table#center table");
+        if (table == null) {
+            throw new IOException("Таблица не найдена в файле: " + htmlFile.getName());
+        }
+
+        // Получение всех строк, кроме заголовков
+        Elements rows = table.select("tr:gt(1)"); // Пропускаем первые 2 строки (заголовок)
+
+        // Объединение строк в одну строку
+        for (Element row : rows) {
+            dataRows.append(row.outerHtml()).append("\n");
+        }
+
+        return dataRows.toString();
+    }
+
+
+    public static String extractDataRowsFromString(String htmlContent) {
+        // Парсим HTML строку в Document
+        Document doc = Jsoup.parse(htmlContent);
+
+        // Извлекаем все строки таблицы, пропуская заголовок
+        Elements rows = doc.select("table#center table tr").not(":nth-child(1), :nth-child(2)");
+
+        // Формируем строку с данными, которые содержат строки таблицы
+        StringBuilder dataRows = new StringBuilder();
+        for (Element row : rows) {
+            dataRows.append(row.toString()).append("\n");  // Добавляем каждую строку с переводом строки
+        }
+
+        return dataRows.toString();  // Возвращаем все строки как одну строку
+    }
+
+
 
     // Метод для сохранения измененного HTML в файл
     public File saveToFile(String htmlContent, String outputFileName) {

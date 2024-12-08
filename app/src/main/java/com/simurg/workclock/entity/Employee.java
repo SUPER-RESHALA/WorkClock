@@ -3,6 +3,15 @@ package com.simurg.workclock.entity;
 public class Employee {
     private String subdivision;
     private String personnelNumber;
+    private String cardId;
+
+    public String getCardId() {
+        return cardId;
+    }
+
+    public void setCardId(String cardId) {
+        this.cardId = cardId;
+    }
 
     public String getSubdivision() {
         return subdivision;
