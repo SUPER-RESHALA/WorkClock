@@ -1,8 +1,9 @@
 package com.simurg.workclock.ftp;
 
+import android.util.Log;
+
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPFile;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -18,13 +19,21 @@ public class FTPFileManager {
     }
 
     /**
-     * Загрузка файла на сервер.
+     * Загрузка файла в текущую рабочую директорию.
      */
-    public boolean uploadFile(String localFilePath, String remoteFilePath) {
-        try (FileInputStream fis = new FileInputStream(new File(localFilePath))) {
+    public boolean uploadFile(String localFileName) {
+        try (FileInputStream fis = new FileInputStream(new File(localFileName))) {
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
-            boolean success = ftpClient.storeFile(remoteFilePath, fis);
-            logOperation("Upload", localFilePath, remoteFilePath, success);
+            String remoteFileName = new File(localFileName).getName(); // Получаем имя файла
+            boolean success = ftpClient.storeFile(remoteFileName, fis); // Используем только имя файла
+            if (!success) {
+                int replyCode = ftpClient.getReplyCode();
+                String replyMessage = ftpClient.getReplyString();
+                Log.e("FTP   LOAD   FILE","Upload failed: FileName=" + localFileName
+                        + ", ReplyCode=" + replyCode
+                        + ", ReplyMessage=" + replyMessage);
+            }
+            logOperation("Upload", localFileName, "Current Directory", success);
             return success;
         } catch (IOException e) {
             System.err.println("Ошибка загрузки файла: " + e.getMessage());
@@ -32,14 +41,15 @@ public class FTPFileManager {
         }
     }
 
+
     /**
-     * Скачивание файла с сервера.
+     * Скачивание файла из текущей рабочей директории.
      */
-    public boolean downloadFile(String remoteFilePath, String localFilePath) {
+    public boolean downloadFile(String remoteFileName, String localFilePath) {
         try (FileOutputStream fos = new FileOutputStream(new File(localFilePath))) {
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
-            boolean success = ftpClient.retrieveFile(remoteFilePath, fos);
-            logOperation("Download", remoteFilePath, localFilePath, success);
+            boolean success = ftpClient.retrieveFile(remoteFileName, fos);
+            logOperation("Download", remoteFileName, localFilePath, success);
             return success;
         } catch (IOException e) {
             System.err.println("Ошибка скачивания файла: " + e.getMessage());
@@ -48,12 +58,12 @@ public class FTPFileManager {
     }
 
     /**
-     * Удаление файла на сервере.
+     * Удаление файла в текущей рабочей директории.
      */
-    public boolean deleteFile(String remoteFilePath) {
+    public boolean deleteFile(String fileName) {
         try {
-            boolean success = ftpClient.deleteFile(remoteFilePath);
-            logOperation("Delete", remoteFilePath, null, success);
+            boolean success = ftpClient.deleteFile(fileName);
+            logOperation("Delete", fileName, "Current Directory", success);
             return success;
         } catch (IOException e) {
             System.err.println("Ошибка удаления файла: " + e.getMessage());
@@ -62,12 +72,12 @@ public class FTPFileManager {
     }
 
     /**
-     * Создание директории на сервере.
+     * Создание поддиректории в текущей рабочей директории.
      */
-    public boolean createDirectory(String remoteDirectoryPath) {
+    public boolean createDirectory(String directoryName) {
         try {
-            boolean success = ftpClient.makeDirectory(remoteDirectoryPath);
-            logOperation("Create Directory", remoteDirectoryPath, null, success);
+            boolean success = ftpClient.makeDirectory(directoryName);
+            logOperation("Create Directory", directoryName, "Current Directory", success);
             return success;
         } catch (IOException e) {
             System.err.println("Ошибка создания директории: " + e.getMessage());
@@ -76,30 +86,42 @@ public class FTPFileManager {
     }
 
     /**
-     * Проверка наличия изменений файла на сервере.
+     * Смена текущей рабочей директории.
      */
-    public boolean isFileModified(String remoteFilePath, long localLastModifiedTime) {
+    public boolean changeWorkingDirectory(String remoteDirectoryPath) {
         try {
-            FTPFile[] files = ftpClient.listFiles(remoteFilePath);
-            if (files.length == 1) {
-                long remoteTimestamp = files[0].getTimestamp().getTimeInMillis();
-                return remoteTimestamp > localLastModifiedTime;
-            }
+            boolean success = ftpClient.changeWorkingDirectory(remoteDirectoryPath);
+            logOperation("Change Directory", remoteDirectoryPath, null, success);
+            return success;
         } catch (IOException e) {
-            System.err.println("Ошибка проверки файла: " + e.getMessage());
+            System.err.println("Ошибка смены рабочей директории: " + e.getMessage());
+            return false;
         }
-        return false;
     }
 
     /**
-     * Список файлов в директории.
+     * Получение текущей рабочей директории.
      */
-    public FTPFile[] listFiles(String remoteDirectoryPath) {
+    public String getCurrentWorkingDirectory() {
         try {
-            return ftpClient.listFiles(remoteDirectoryPath);
+            return ftpClient.printWorkingDirectory();
         } catch (IOException e) {
-            System.err.println("Ошибка получения списка файлов: " + e.getMessage());
-            return new FTPFile[0];
+            System.err.println("Ошибка получения текущей рабочей директории: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Навигация к родительской директории.
+     */
+    public boolean navigateToParentDirectory() {
+        try {
+            boolean success = ftpClient.changeToParentDirectory();
+            logOperation("Navigate To Parent Directory", null, null, success);
+            return success;
+        } catch (IOException e) {
+            System.err.println("Ошибка навигации вверх: " + e.getMessage());
+            return false;
         }
     }
 

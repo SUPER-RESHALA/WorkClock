@@ -3,8 +3,10 @@ package com.simurg.workclock.file;
 import android.content.Context;
 import android.util.Log;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +56,36 @@ public class FileManagerDesktop {
         }
     }
 
+
+
+
+
+    public static File createFileNEWMETHOD(Context context, String folderName, String fileName, String fileContent) {
+        File folder = new File(context.getExternalFilesDir(null), folderName);
+
+        // Проверяем существование папки, при необходимости создаем
+        if (!folder.exists() && !folder.mkdirs()) {
+            Log.e("FileManager", "Не удалось создать папку: " + folder.getAbsolutePath());
+            return null; // Возвращаем null, так как файл создать невозможно
+        }
+
+        File file = new File(folder, fileName);
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            fos.write(fileContent.getBytes());
+            fos.flush();
+            Log.i("FileManager", "Файл успешно создан: " + file.getAbsolutePath());
+            return file;
+        } catch (IOException e) {
+            Log.e("FileManager", "Ошибка при создании файла: " + e.getMessage(), e);
+            return null; // Возвращаем null в случае ошибки
+        }
+    }
+
+
+
+
+
+
     public static List<File> getAllFoldersInDirectory(Context context, String parentDirectoryName) {
         File parentDirectory = new File(context.getExternalFilesDir(null), parentDirectoryName);
         List<File> foldersList = new ArrayList<>();
@@ -78,6 +110,29 @@ public class FileManagerDesktop {
         return foldersList;
     }
 
+    public static String readFileContent(Context context, String folderName, String fileName) {
+        File folder = new File(context.getExternalFilesDir(null), folderName);
+        File file = new File(folder, fileName);
+
+        if (!file.exists()) {
+            Log.e("FileReader", "Файл не найден: " + file.getAbsolutePath());
+            return null;
+        }
+
+        StringBuilder content = new StringBuilder();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+        } catch (IOException e) {
+            Log.e("FileReader", "Ошибка при чтении файла: " + e.getMessage(), e);
+            return null;
+        }
+
+        return content.toString().trim(); // Возвращаем содержимое файла без лишних переносов строк в конце
+    }
 
     public static List<File> getListAllFoldersInExternalFilesDir(Context context) {
         List<File> folderList = new ArrayList<>();

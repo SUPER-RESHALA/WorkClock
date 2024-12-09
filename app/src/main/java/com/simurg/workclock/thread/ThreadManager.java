@@ -29,5 +29,7 @@ public class ThreadManager {
     // Закрытие пула потоков
     public void shutDown() {
         executorService.shutdown();
+
+
     }
 }
