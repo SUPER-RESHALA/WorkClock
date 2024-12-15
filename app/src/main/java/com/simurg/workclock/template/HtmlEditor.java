@@ -3,8 +3,11 @@ package com.simurg.workclock.template;
 import static com.simurg.workclock.file.FileManagerDesktop.createCustomFolder;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
+
+import com.simurg.workclock.file.FileManagerDesktop;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -16,6 +19,13 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
+
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
 public class HtmlEditor {
 
     private final Context context;
@@ -27,7 +37,7 @@ public class HtmlEditor {
     }
 
     // Метод для загрузки шаблона из папки assets
-    public String loadTemplate() {
+    public  String loadTemplate() {
         StringBuilder htmlContent = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(context.getAssets().open(templateFileName), "UTF-8"))) {
@@ -68,17 +78,25 @@ stringBuilder.insert(indexOfTableTag,newRow);
     }
 
 
-    public static String extractDataRowsFromFile(File htmlFile) throws IOException {
+
+
+
+
+
+
+
+    public static String extractDataRowsFromFileOldVersion(File htmlFile) throws IOException {
         StringBuilder dataRows = new StringBuilder();
 
         // Парсинг HTML-файла
         Document document = Jsoup.parse(htmlFile, "UTF-8");
 
         // Поиск таблицы с данными
-        Element table = document.selectFirst("table#center table");
-        if (table == null) {
+        Elements tables = document.select("table#center table");
+        if (tables.isEmpty()) {
             throw new IOException("Таблица не найдена в файле: " + htmlFile.getName());
         }
+        Element table = tables.get(0); // Берем первый найденный элемент
 
         // Получение всех строк, кроме заголовков
         Elements rows = table.select("tr:gt(1)"); // Пропускаем первые 2 строки (заголовок)
@@ -90,6 +108,41 @@ stringBuilder.insert(indexOfTableTag,newRow);
 
         return dataRows.toString();
     }
+
+
+
+
+
+
+
+
+//    public static String extractDataRowsFromFile(File htmlFile) throws IOException {
+//        StringBuilder dataRows = new StringBuilder();
+//
+//        // Парсинг HTML-файла
+//        Document document = Jsoup.parse(htmlFile, "UTF-8");
+//
+//        // Поиск таблицы с данными
+//        Element table = document.selectFirst("table#center table");
+//        if (table == null) {
+//            throw new IOException("Таблица не найдена в файле: " + htmlFile.getName());
+//        }
+//
+//        // Получение всех строк, кроме заголовков
+//        Elements rows = table.select("tr:gt(1)"); // Пропускаем первые 2 строки (заголовок)
+//
+//        // Объединение строк в одну строку
+//        for (Element row : rows) {
+//            dataRows.append(row.outerHtml()).append("\n");
+//        }
+//
+//        return dataRows.toString();
+//    }
+
+
+
+
+
 
 
     public static String extractDataRowsFromString(String htmlContent) {
@@ -107,7 +160,13 @@ stringBuilder.insert(indexOfTableTag,newRow);
 
         return dataRows.toString();  // Возвращаем все строки как одну строку
     }
-
+    public static File mergeFiles(Context context, File firstFile,  File outputAndSecondFile) throws IOException {
+     String firstFileContent=extractDataRowsFromFileOldVersion(firstFile);
+      String finalContent=  FileManagerDesktop.readFileContenFromFile(outputAndSecondFile);
+        finalContent= addNewRowToHtml(finalContent,firstFileContent);
+        return FileManagerDesktop.createFileInCustomFolder(outputAndSecondFile.getParentFile(),outputAndSecondFile.getName(),finalContent);
+       // return FileManagerDesktop.writeToFile(outputAndSecondFile,finalContent);
+    }
 
 
     // Метод для сохранения измененного HTML в файл
@@ -137,5 +196,6 @@ stringBuilder.insert(indexOfTableTag,newRow);
         }
 
     }
+
 
 }//END OF CLASS

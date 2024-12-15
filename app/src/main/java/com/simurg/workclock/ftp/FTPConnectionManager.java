@@ -16,6 +16,7 @@ public class FTPConnectionManager {
     public static final String hostname = "ftp.simurg.by";
     public static final String user = "timetracker@timetracker.simurg-mp.com";
     public static final String password = "TimetrackerAdmin";
+    private boolean isConnected;
     public FTPConnectionManager() {
         ftpClient = new FTPClient();
     }
@@ -42,6 +43,16 @@ public class FTPConnectionManager {
             return false;
         }
     }
+
+//    public synchronized FTPClient getConnection() throws IOException {
+//        if (this.getFtpClient() == null || !this.getFtpClient().isConnected()) {
+//            this.getFtpClient().connect(hostname);
+//            this.getFtpClient().login(user, password);
+//            this.getFtpClient().enterLocalPassiveMode();
+//            isConnected = true;
+//        }
+//        return ftpClient;
+//    }
 
     public boolean login(String username, String password) {
         try {
@@ -75,7 +86,7 @@ public class FTPConnectionManager {
         }
     }
 
-    public void disconnect() {
+    public synchronized void disconnect() {
         try {
             if (ftpClient.isConnected()) {
                 ftpClient.disconnect();
@@ -86,18 +97,25 @@ public class FTPConnectionManager {
         }
     }
 
+
+//    public synchronized void disconnect() throws IOException {
+//        if (this.ftpClient != null && this.ftpClient.isConnected()) {
+//            this.ftpClient.logout();
+//            this.ftpClient.disconnect();
+//            isConnected = false;
+//        }
+//    }
+
     public boolean isConnected() {
         return ftpClient.isConnected();
     }
 
     private void logInfo(String message) {
         Log.i(TAG , " [INFO]: " + message);
-      //  System.out.println(TAG + " [INFO]: " + message);
     }
 
     private void logError(String message) {
         Log.e(TAG , " [ERROR]: " + message);
-      //  System.err.println(TAG + " [ERROR]: " + message);
     }
 
     public FTPClient getFtpClient() {

@@ -4,11 +4,13 @@ import android.util.Log;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Objects;
 
 public class FTPFileManager {
 
@@ -36,7 +38,7 @@ public class FTPFileManager {
             logOperation("Upload", localFileName, "Current Directory", success);
             return success;
         } catch (IOException e) {
-            System.err.println("Ошибка загрузки файла: " + e.getMessage());
+            Log.e("FTPFileManager uploadFile","Ошибка загрузки файла: " + e.getMessage() );
             return false;
         }
     }
@@ -52,7 +54,7 @@ public class FTPFileManager {
             logOperation("Download", remoteFileName, localFilePath, success);
             return success;
         } catch (IOException e) {
-            System.err.println("Ошибка скачивания файла: " + e.getMessage());
+            Log.e("FTPFileManager download file ","Ошибка скачивания файла: " + e.getMessage());
             return false;
         }
     }
@@ -111,6 +113,13 @@ public class FTPFileManager {
         }
     }
 
+
+
+     public void uploadHtmlFile(String localFileName, String subdivision){
+
+
+
+     }
     /**
      * Навигация к родительской директории.
      */
@@ -134,4 +143,60 @@ public class FTPFileManager {
                 (source != null ? "Source: " + source + " " : "") +
                 (target != null ? "Target: " + target : ""));
     }
-}
+
+    /**
+     * Обеспечивает существование директории на сервере FTP и переходит в неё.
+     *
+     * @param ftpFileManager объект FTPFileManager для работы с сервером.
+     * @param fullPath полный путь к директории (например, "2024/12.2024").
+     * @return true, если успешно перешёл в директорию; false, если возникла ошибка.
+     * @throws IOException если произошла ошибка при создании директории.
+     */
+    public boolean ensureAndChangeToDirectory(FTPFileManager ftpFileManager, String fullPath) throws IOException {
+        String[] directories = fullPath.split("/"); // Разбиваем путь на компоненты
+        String currentPath = "";
+
+        for (String dir : directories) {
+            currentPath += "/" + dir; // Строим текущий путь по мере продвижения
+
+            // Пытаемся перейти в текущую директорию
+            boolean changed = ftpFileManager.changeWorkingDirectory(currentPath);
+
+            if (!changed) {
+                // Если директория не существует, создаём её
+                boolean created = ftpFileManager.createDirectory(currentPath);
+
+                if (!created) {
+                    Log.e("FTPFileManager/ensureAndChangeToDirectory", "Не удалось создать директорию: " + currentPath);
+                    return false;
+                }
+
+                // После создания пробуем снова перейти в неё
+                ftpFileManager.changeWorkingDirectory(currentPath);
+            }
+        }
+        return true; // Успешно перешли в конечную директорию
+    }
+
+public boolean moveCurrentDir(FTPFileManager ftpFileManager, String path) throws IOException {
+        if (!Objects.equals(ftpFileManager.getCurrentWorkingDirectory(),path)){
+          ftpFileManager.navigateToParentDirectory();
+          if (!ensureAndChangeToDirectory(ftpFileManager,path)){
+              Log.e("moveCurrentDir", "не удалось перейти в директорию "+ path);
+              return false;
+          }
+        }
+        Log.i("moveCurrentDir", "Успешно перешли в "+ path);
+        return  true;
+}//end of method
+    public boolean fileExists(String fileName) {
+        try {
+            FTPFile[] files = ftpClient.listFiles(fileName); // Проверяем текущую директорию
+            return files.length > 0 && files[0].isFile(); // Если найдено, проверяем, что это файл
+        } catch (IOException e) {
+            Log.e("FTPFileManager fileExists ", "Ошибка при проверке существования файла: " + e.getMessage());
+            return false;
+        }
+    }
+
+}//edn of class

@@ -25,8 +25,8 @@ public class DateTimeManager {
     }
 
     // Получить текущий год
-    public int getYear() {
-        return calendar.get(Calendar.YEAR);
+    public String getYear() {
+        return String.valueOf(calendar.get(Calendar.YEAR));
     }
 
     // Получить текущую дату в формате "день.месяц.год"
@@ -43,5 +43,12 @@ public class DateTimeManager {
         Date currentTime = calendar.getTime();
         SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
         return timeFormat.format(currentTime);
+    }
+
+    public String getFormattedMonthYear() {
+        calendar.setTimeInMillis(System.currentTimeMillis());  // Обновляем время
+        Date currentDate = calendar.getTime();
+        SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM.yyyy", Locale.getDefault());
+        return monthYearFormat.format(currentDate);
     }
 }

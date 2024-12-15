@@ -2,16 +2,24 @@ package com.simurg.workclock.entity;
 
 public class Employee {
     private String subdivision;
-    private String personnelNumber;
-    private String cardId;
+    private String code;
 
-    public String getCardId() {
-        return cardId;
+    @Override
+    public String toString() {
+        return "Employee{" +
+                "subdivision='" + subdivision + '\'' +
+                ", code='" + code + '\'' +
+                '}';
     }
 
-    public void setCardId(String cardId) {
-        this.cardId = cardId;
+    public String getCode() {
+        return code;
     }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
 
     public String getSubdivision() {
         return subdivision;
@@ -21,11 +29,4 @@ public class Employee {
         this.subdivision = subdivision;
     }
 
-    public String getPersonnelNumber() {
-        return personnelNumber;
-    }
-
-    public void setPersonnelNumber(String personnelNumber) {
-        this.personnelNumber = personnelNumber;
-    }
 }
