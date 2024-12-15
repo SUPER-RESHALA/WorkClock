@@ -195,15 +195,5 @@ String TAG="checkCardFileModify";
         }
     }// end of method uploadTmp
 
-public void deleteAllTmp(Context context, DateTimeManager dateTimeManager){
-    String mainFolderName ="WorkClockFiles";
-    String currentYear= dateTimeManager.getYear();
-    String currentMonthYear= dateTimeManager.getFormattedMonthYear();
-    File baseDir = context.getExternalFilesDir(null); // Базовая директория приложения
-    File mainF = new File(baseDir, mainFolderName+"/" + currentYear+ "/"+currentMonthYear);
-    List<String> relativePaths = new ArrayList<>();
-    List<File> files = collectFiles(mainF, "", relativePaths);
-
-}
 
 }//end of Class

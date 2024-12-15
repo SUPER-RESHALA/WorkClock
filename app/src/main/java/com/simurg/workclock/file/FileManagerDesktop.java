@@ -1,5 +1,7 @@
 package com.simurg.workclock.file;
 
+import static com.simurg.workclock.FileCollector.collectFiles;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -279,7 +281,7 @@ public class FileManagerDesktop {
          htmlFile = createFileInCustomFolder(subdivisionFolder,htmlFile.getName(),finalContent);
       }else {
          String htmlFileContent= readFileContenFromFile(htmlFile);
-          System.out.println(htmlFileContent);
+          //System.out.println(htmlFileContent);
          String finalContent= htmlEditor.addNewRowToHtml(htmlFileContent,code,currentDate,currentTime,note);
           htmlFile = createFileInCustomFolder(subdivisionFolder,htmlFile.getName(),finalContent);
       }
@@ -322,6 +324,23 @@ public class FileManagerDesktop {
         return success;
     }
 
-
+    public static boolean deleteFile(File file) {
+        if (file != null && file.isFile()) {
+            return file.delete(); // Удаляет файл, если это действительно файл
+        }
+        return false; // Если это не файл, возвращаем false
+    }
+    public static void deleteAllTmp(Context context, DateTimeManager dateTimeManager){
+        String mainFolderName ="WorkClockFiles";
+        String currentYear= dateTimeManager.getYear();
+        String currentMonthYear= dateTimeManager.getFormattedMonthYear();
+        File baseDir = context.getExternalFilesDir(null); // Базовая директория приложения
+        File mainF = new File(baseDir, mainFolderName+"/" + currentYear+ "/"+currentMonthYear);
+        List<String> relativePaths = new ArrayList<>();
+        List<File> files = collectFiles(mainF, "", relativePaths);
+     for (int i=0; i< files.size();i++){
+        deleteFile(files.get(i));
+     }
+    }
 
 }

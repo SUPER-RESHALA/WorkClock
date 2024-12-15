@@ -140,7 +140,16 @@ public class MainActivity extends AppCompatActivity {
 //        }
 
    // FileManagerDesktop.createTemplateFile(this,employee,mainFolderName,dateTimeManager, mainFolder);
-        File firstFile= new File(mainFolder,"/416.html");
+//        File firstFile1= new File(mainFolder,"2024/12.2024/AUP/416local.html");
+//        File firstFile2= new File(mainFolder,"2024/12.2024/AUP/427local.html");
+//        File firstFile3= new File(mainFolder,"2024/12.2024/AUP/427.html");
+//        File firstFile4= new File(mainFolder,"2024/12.2024/AUP/463local.html");
+//        File firstFile5= new File(mainFolder,"2024/12.2024/AUP/463.html");
+//        FileManagerDesktop.deleteFile(firstFile1);
+//        FileManagerDesktop.deleteFile(firstFile2);
+//        FileManagerDesktop.deleteFile(firstFile3);
+//        FileManagerDesktop.deleteFile(firstFile4);
+//        FileManagerDesktop.deleteFile(firstFile5);
         //   File secondFile= new File(mainFolder,"/261.html");
 
       //  System.out.println(FileManagerDesktop.readFileContenFromFile(secondFile));
@@ -164,24 +173,24 @@ public class MainActivity extends AppCompatActivity {
 
 
         //FileManagerDesktop.renameFile(TestFile.getAbsolutePath(),"TESTFILE");
-
-        List<String> relativePaths = new ArrayList<>();
-
-        // Получаем массив файлов
-        List<File> files = collectFiles(mainF, "", relativePaths);
-        System.out.println("---------------------------------------------------------------------------------");
-        // Вывод относительных путей
-        System.out.println("Относительные пути:");
-        for (String path : relativePaths) {
-            System.out.println(path);
-        }
-        System.out.println("---------------------------------------------------------------------------------");
-
-        // Вывод полного пути каждого файла
-        System.out.println("\nАбсолютные пути файлов:");
-        for (File file : files) {
-            System.out.println(file.getAbsolutePath());
-        }
+//
+//        List<String> relativePaths = new ArrayList<>();
+//
+//        // Получаем массив файлов
+//        List<File> files = collectFiles(mainF, "", relativePaths);
+//        System.out.println("---------------------------------------------------------------------------------");
+//        // Вывод относительных путей
+//        System.out.println("Относительные пути:");
+//        for (String path : relativePaths) {
+//            System.out.println(path);
+//        }
+//        System.out.println("---------------------------------------------------------------------------------");
+//
+//        // Вывод полного пути каждого файла
+//        System.out.println("\nАбсолютные пути файлов:");
+//        for (File file : files) {
+//            System.out.println(file.getAbsolutePath());
+//        }
 
 
 //
