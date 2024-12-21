@@ -8,6 +8,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.simurg.workclock.data.DateTimeManager;
+import com.simurg.workclock.file.CsvReader;
 import com.simurg.workclock.file.FileManagerDesktop;
 import com.simurg.workclock.network.NetworkUtils;
 import com.simurg.workclock.template.HtmlEditor;
@@ -25,7 +26,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class FTPThreadTasks {
-    public static synchronized void checkCardFileModify(Context context  ) {
+    public static synchronized void checkCardFileModify(Context context, CsvReader csvReader) {
      new Thread(()->{
 String TAG="checkCardFileModify";
      int replyCode;
@@ -71,20 +72,26 @@ String TAG="checkCardFileModify";
             // Проверяем наличие локального файла и его размер
             if (localFile.exists() && remoteFileSize != localFile.length()) {
                 Log.i(TAG, "Локальный файл отличается от файла на сервере. Заменяем его.");
+                csvReader.startUpdate();
                 try (BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(localFile))) {
                     if (ftpConnectionManager.getFtpClient().retrieveFile(remoteFileName, outputStream)) {
                         Log.i(TAG, "Файл успешно обновлен: " + localFile.getAbsolutePath());
+                        csvReader.finishUpdate();
                     } else {
+                        csvReader.finishUpdate();
                         Log.e(TAG, "Не удалось обновить файл. Код ответа: " + ftpConnectionManager.getFtpClient().getReplyCode());
                     }
                 }
             } else if (!localFile.exists()) {
                 Log.i(TAG, "Локальный файл отсутствует. Скачиваем его.");
+                csvReader.startUpdate();
                 try (BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(localFile))) {
                     if (ftpConnectionManager.getFtpClient().retrieveFile(remoteFileName, outputStream)) {
                         Log.i(TAG, "Файл успешно скачан: " + localFile.getAbsolutePath());
+                        csvReader.finishUpdate();
                     } else {
                         Log.e(TAG, "Не удалось скачать файл. Код ответа: " + ftpConnectionManager.getFtpClient().getReplyCode());
+                        csvReader.finishUpdate();
                     }
                 }
             } else {
@@ -95,9 +102,12 @@ String TAG="checkCardFileModify";
         }
     } catch (IOException e) {
         Log.e(TAG, "Ошибка при проверке или загрузке файла: " + e.getMessage(), e);
+        if (csvReader.checkIsUpdating()){csvReader.finishUpdate();}
     }finally {
         ftpConnectionManager.disconnect();
         Log.i(TAG, "Соединение с FTP-сервером закрыто.");
+        if (csvReader.checkIsUpdating()){csvReader.finishUpdate();}
+
     }
 }).start();
 
@@ -148,7 +158,7 @@ String TAG="checkCardFileModify";
             Log.e("SEND FILE TO FTP", "NO INTERNET");
         }
     }
-
+//TODO: Обязательно обработать случай, когда нет временных файлов, т.е. List<File> files пуст(==null)
     public static void uploadAllTmp(Context context, DateTimeManager dateTimeManager){
         FTPConnectionManager ftpConnectionManager = new FTPConnectionManager();
         FTPFileManager ftpFileManager = new FTPFileManager(ftpConnectionManager.getFtpClient());
@@ -161,6 +171,10 @@ String TAG="checkCardFileModify";
         List<String> relativePaths = new ArrayList<>();// относительные пути файлов
         // Получаем массив файлов
         List<File> files = collectFiles(mainF, "", relativePaths);
+        if(relativePaths.isEmpty()|| files.isEmpty()){
+            Log.i("uploadAllTmp", "Нет временных файлов");
+            return;
+        }
         try{
          ftpConnectionManager.connect(FTPConnectionManager.hostname);
          ftpConnectionManager.login(FTPConnectionManager.user,FTPConnectionManager.password);

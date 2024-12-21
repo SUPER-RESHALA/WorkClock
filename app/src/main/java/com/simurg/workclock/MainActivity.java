@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
     private FTPConnectionManager ftpConnectionManager;
     private ScheduledExecutorService scheduler;
     private static String mainFolderName = "WorkClockFiles";
-
+CsvReader csvReader;
     private FTPFileManager ftpFileManager;
 
     @Override
@@ -81,18 +81,25 @@ public class MainActivity extends AppCompatActivity {
         // Инициализация ActivityResultLauncher
 
         showDialog("WorkClockFiles", "id.txt");
+        String filePath = this.getExternalFilesDir(null) + "/WorkClockFiles/cards.csv";
+        csvReader= new CsvReader();
+        Map<String, Employee> map = csvReader.readCsvToMap(filePath);
+        File baseDir = this.getExternalFilesDir(null); // Базовая директория приложения
+        File mainFolder = new File(baseDir, mainFolderName);
 
         threadManager = new ThreadManager();
         rfidNumber = findViewById(R.id.cardNumRFID);
         rfidNumber.setFocusable(true);
         rfidNumber.setFocusableInTouchMode(true);
         rfidNumber.setInputType(InputType.TYPE_NULL);
-        RFIDHandler.RFIDInputHandler(rfidNumber, this);
         timeMain = findViewById(R.id.timeMain);
         dateMain = findViewById(R.id.dateMain);
         dateTimeManager = new DateTimeManager();
         timeMain.setText(dateTimeManager.getFormattedTime());
         dateMain.setText(dateTimeManager.getFormattedDate());
+
+        RFIDHandler.RFIDInputHandler(rfidNumber, this , map, dateTimeManager,mainFolderName,mainFolder);
+
 
         handler = new Handler();
         // Запускаем обновление времени каждую секунду
@@ -100,9 +107,9 @@ public class MainActivity extends AppCompatActivity {
 
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-    // startUploadingFileEveryMinute(this, "WorkClockFiles", dateTimeManager, scheduler);
+     startUploadingFileEveryMinute(this, "WorkClockFiles", dateTimeManager, scheduler);
 
-        String filePath = this.getExternalFilesDir(null) + "/WorkClockFiles/cards.csv";
+
         //ftpFileManager.downloadFile("cards.csv" ,filePath);
 //      Map<String, Employee> map = CsvReader.readCsvToMap(filePath);
 //
@@ -128,8 +135,7 @@ public class MainActivity extends AppCompatActivity {
 //        System.out.println(employee.getCode() + " " + employee.getSubdivision());
 //        System.out.println(employee.getCode() + " " + employee.getSubdivision());
 //        System.out.println(employee.getCode() + " " + employee.getSubdivision());
-        File baseDir = this.getExternalFilesDir(null); // Базовая директория приложения
-        File mainFolder = new File(baseDir, mainFolderName);
+
      
         //FileManagerDesktop.createTemplateFile(this,employee," ", dateTimeManager, mainFolder);
 

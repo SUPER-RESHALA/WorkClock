@@ -9,9 +9,24 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CsvReader {
-    public static Map<String, Employee> readCsvToMap(String filePath) {
+   private  final AtomicBoolean isUpdating = new AtomicBoolean(false);
+    public void startUpdate() {
+        if (!isUpdating.compareAndSet(false, true)) {
+            throw new IllegalStateException("CSV обновляется, операция запрещена.");
+        }
+    }
+
+    public boolean checkIsUpdating() {
+        return isUpdating.get();
+    }
+
+    public void finishUpdate() {
+        isUpdating.set(false);
+    }
+    public Map<String, Employee> readCsvToMap(String filePath) {
         Map<String, Employee> map = new HashMap<>();
         BufferedReader br = null;
 
