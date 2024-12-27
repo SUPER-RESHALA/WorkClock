@@ -49,6 +49,7 @@ import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -62,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
     private ThreadManager threadManager;
     private Handler handler;
     private Runnable timeUpdater;
+
     private FTPConnectionManager ftpConnectionManager;
     private ScheduledExecutorService scheduler;
     private static String mainFolderName = "WorkClockFiles";
@@ -82,10 +84,19 @@ CsvReader csvReader;
 
         showDialog("WorkClockFiles", "id.txt");
         String filePath = this.getExternalFilesDir(null) + "/WorkClockFiles/cards.csv";
-        csvReader= new CsvReader();
-        Map<String, Employee> map = csvReader.readCsvToMap(filePath);
         File baseDir = this.getExternalFilesDir(null); // Базовая директория приложения
         File mainFolder = new File(baseDir, mainFolderName);
+
+
+
+        // File cardsCsv= new File(mainFolder,"/cards.csv");
+        File cardsCsv1= new File(mainFolder,"cards.csv");
+        //System.out.println("----------------------------------   "+ cardsCsv.getName()+"  "+cardsCsv.getAbsolutePath());
+//        System.out.println("----------------------------------   "+ cardsCsv1.getName()+"  "+cardsCsv1.getAbsolutePath());
+
+        csvReader= new CsvReader();
+      //  Map<String, Employee> map = csvReader.readCsvToMap(filePath);
+
 
         threadManager = new ThreadManager();
         rfidNumber = findViewById(R.id.cardNumRFID);
@@ -97,16 +108,18 @@ CsvReader csvReader;
         dateTimeManager = new DateTimeManager();
         timeMain.setText(dateTimeManager.getFormattedTime());
         dateMain.setText(dateTimeManager.getFormattedDate());
-
-        RFIDHandler.RFIDInputHandler(rfidNumber, this , map, dateTimeManager,mainFolderName,mainFolder);
-
-
+        RFIDHandler rfidHandler = new RFIDHandler();
+       rfidHandler.RFIDInputHandler(rfidNumber, this, dateTimeManager,mainFolderName, mainFolder, csvReader);
+        // RFIDHandler.RFIDInputHandler(rfidNumber, this , dateTimeManager,mainFolderName,mainFolder, csvReader);
         handler = new Handler();
         // Запускаем обновление времени каждую секунду
         startUpdatingTime();
+//        new Thread(() -> {
+//            FTPThreadTasks.uploadAllTmp(this,dateTimeManager);
+//        }).start();
 
-        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-
+//        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+      scheduler = Executors.newSingleThreadScheduledExecutor();
      startUploadingFileEveryMinute(this, "WorkClockFiles", dateTimeManager, scheduler);
 
 
@@ -169,6 +182,7 @@ CsvReader csvReader;
 
         File base = this.getExternalFilesDir(null); // Базовая директория приложения
         File mainF = new File(base, mainFolderName+"/2024"+ "/12.2024");
+
 //File testRead= new File(mainF,"/C_4/392.html");
 //
 //        try {
@@ -235,6 +249,47 @@ CsvReader csvReader;
     }
 
 
+
+
+    private void startUpdErrFile(File mainFolder) {
+        Runnable errUpdater = new Runnable() {
+            @Override
+            public void run() {
+                FTPConnectionManager ftpConnectionManagerErr = new FTPConnectionManager();
+                try {
+                    ftpConnectionManagerErr.connect(FTPConnectionManager.hostname);
+                    ftpConnectionManagerErr.login(FTPConnectionManager.user,FTPConnectionManager.password);
+                    FTPFileManager ftpFileManagerErr = new FTPFileManager(ftpConnectionManagerErr.getFtpClient());
+                    if ( ftpFileManagerErr.getCurrentWorkingDirectory()!="/settings"){
+                        ftpFileManagerErr.navigateToParentDirectory();
+                        ftpFileManagerErr.changeWorkingDirectory("settings/");
+                        File errFile = new File(mainFolder.getAbsolutePath(),"error.txt");
+                        if (ftpFileManagerErr.uploadFile(errFile.getAbsolutePath())){
+                            ftpConnectionManagerErr.disconnect();
+                        }
+                    }
+                }catch (Exception e){
+                   Log.e("errUpdater", "Some error in this method or connection troubles");
+                }finally {
+                    ftpConnectionManagerErr.disconnect();
+                }
+              // Перезапуск через 6 минут для времени
+                handler.postDelayed(this,360000);
+            }
+        };
+
+        // Запуск обновления
+        handler.post(errUpdater);
+    }
+
+
+
+
+
+
+
+
+
     private void startUpdatingTime() {
         timeUpdater = new Runnable() {
             @Override
@@ -247,7 +302,6 @@ CsvReader csvReader;
                 if (!dateMain.getText().toString().equals(currentDate)) {
                     dateMain.setText(currentDate);
                 }
-
                 // Перезапуск через 1 секунду для времени
                 handler.postDelayed(this, 1000);
             }
@@ -271,9 +325,9 @@ CsvReader csvReader;
     }
 
 
+
+
     public synchronized void startUploadingFileEveryMinute(Context context,  String localFolderName, DateTimeManager dateTimeManager, ScheduledExecutorService scheduler) {
-
-
         Runnable task = new Runnable() {
             @Override
             public void run() {
@@ -286,7 +340,7 @@ CsvReader csvReader;
             }
         };
         // Запуск задачи каждую минуту (60 секунд)
-        scheduler.scheduleAtFixedRate(task, 0, 1, TimeUnit.MINUTES);
+        scheduler.scheduleWithFixedDelay(task, 0, 1, TimeUnit.MINUTES);
 
     }
 

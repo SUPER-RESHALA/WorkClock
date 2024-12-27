@@ -175,6 +175,7 @@ String TAG="checkCardFileModify";
             Log.i("uploadAllTmp", "Нет временных файлов");
             return;
         }
+        boolean allFilesUploaded = true;
         try{
          ftpConnectionManager.connect(FTPConnectionManager.hostname);
          ftpConnectionManager.login(FTPConnectionManager.user,FTPConnectionManager.password);
@@ -205,7 +206,11 @@ String TAG="checkCardFileModify";
               ftpConnectionManager.disconnect();
           }
         } catch (IOException e) {
+            allFilesUploaded = false;
             throw new RuntimeException(e);
+        }
+        if (allFilesUploaded){
+            FileManagerDesktop.deleteAllTmp(context,dateTimeManager);
         }
     }// end of method uploadTmp
 

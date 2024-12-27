@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CsvReader {
    private  final AtomicBoolean isUpdating = new AtomicBoolean(false);
-    public void startUpdate() {
+    public void startUpdate()throws IllegalStateException {
         if (!isUpdating.compareAndSet(false, true)) {
             throw new IllegalStateException("CSV обновляется, операция запрещена.");
         }
