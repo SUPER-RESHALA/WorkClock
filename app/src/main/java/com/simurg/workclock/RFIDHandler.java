@@ -41,7 +41,7 @@ public class RFIDHandler {
             return false; // Если это не Enter или Done, не обрабатываем
         });
     }
-    private  void processScannedData(String data, Activity activity, DateTimeManager dateTimeManager, String mainFolderName, File mainFolder, CsvReader csvReader) {
+    private  synchronized void processScannedData(String data, Activity activity, DateTimeManager dateTimeManager, String mainFolderName, File mainFolder, CsvReader csvReader) {
         // Здесь ваша логика обработки данных
        // Toast.makeText(activity,data,Toast.LENGTH_SHORT).show();
         Log.d("ScannedData", data);

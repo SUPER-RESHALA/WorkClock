@@ -86,7 +86,7 @@ public class FTPConnectionManager {
         }
     }
 
-    public synchronized void disconnect() {
+    public void disconnect() {
         try {
             if (ftpClient.isConnected()) {
                 ftpClient.disconnect();
