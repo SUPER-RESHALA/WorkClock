@@ -199,4 +199,13 @@ public boolean moveCurrentDir(FTPFileManager ftpFileManager, String path) throws
         }
     }
 
+    public long getFileSize(String fileName, FTPClient ftpClient) throws IOException {
+        FTPFile[] files = ftpClient.listFiles(fileName);
+        if (files.length == 1) {
+            return files[0].getSize();
+        }
+        return -1; // Файл не найден
+    }
+
+
 }//edn of class

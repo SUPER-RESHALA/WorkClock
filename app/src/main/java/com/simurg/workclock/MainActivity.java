@@ -27,6 +27,7 @@ import com.simurg.workclock.Dialog.DialogDeviceIdListener;
 import com.simurg.workclock.data.DateTimeManager;
 import com.simurg.workclock.entity.Employee;
 import com.simurg.workclock.file.CsvReader;
+import com.simurg.workclock.file.DataQueueManager;
 import com.simurg.workclock.file.FileManagerDesktop;
 import com.simurg.workclock.ftp.FTPConnectionManager;
 import com.simurg.workclock.ftp.FTPFileManager;
@@ -67,13 +68,12 @@ public class MainActivity extends AppCompatActivity {
     private FTPConnectionManager ftpConnectionManager;
     private ScheduledExecutorService scheduler;
     private static String mainFolderName = "WorkClockFiles";
+    DataQueueManager dataQueueManager;
 CsvReader csvReader;
     private FTPFileManager ftpFileManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
-
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
@@ -81,23 +81,12 @@ CsvReader csvReader;
         int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
         decorView.setSystemUiVisibility(uiOptions);
         // Инициализация ActivityResultLauncher
-
         showDialog("WorkClockFiles", "id.txt");
         String filePath = this.getExternalFilesDir(null) + "/WorkClockFiles/cards.csv";
         File baseDir = this.getExternalFilesDir(null); // Базовая директория приложения
         File mainFolder = new File(baseDir, mainFolderName);
-
-
-
-        // File cardsCsv= new File(mainFolder,"/cards.csv");
-        File cardsCsv1= new File(mainFolder,"cards.csv");
-        //System.out.println("----------------------------------   "+ cardsCsv.getName()+"  "+cardsCsv.getAbsolutePath());
-//        System.out.println("----------------------------------   "+ cardsCsv1.getName()+"  "+cardsCsv1.getAbsolutePath());
-
+dataQueueManager= new DataQueueManager();
         csvReader= new CsvReader();
-      //  Map<String, Employee> map = csvReader.readCsvToMap(filePath);
-
-
         threadManager = new ThreadManager();
         rfidNumber = findViewById(R.id.cardNumRFID);
         rfidNumber.setFocusable(true);
@@ -109,127 +98,15 @@ CsvReader csvReader;
         timeMain.setText(dateTimeManager.getFormattedTime());
         dateMain.setText(dateTimeManager.getFormattedDate());
         RFIDHandler rfidHandler = new RFIDHandler();
-       rfidHandler.RFIDInputHandler(rfidNumber, this, dateTimeManager,mainFolderName, mainFolder, csvReader);
-        // RFIDHandler.RFIDInputHandler(rfidNumber, this , dateTimeManager,mainFolderName,mainFolder, csvReader);
+      rfidHandler.RFIDInputHandler(rfidNumber, this, dateTimeManager,mainFolderName, mainFolder, csvReader,dataQueueManager);
         handler = new Handler();
         // Запускаем обновление времени каждую секунду
         startUpdatingTime();
-//        new Thread(() -> {
-//            FTPThreadTasks.uploadAllTmp(this,dateTimeManager);
-//        }).start();
-
-//        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
       scheduler = Executors.newSingleThreadScheduledExecutor();
      startUploadingFileEveryMinute(this, "WorkClockFiles", dateTimeManager, scheduler);
 
 
-        //ftpFileManager.downloadFile("cards.csv" ,filePath);
-//      Map<String, Employee> map = CsvReader.readCsvToMap(filePath);
-//
-//       Employee employee = map.get("0003830814");
-//        ArrayList<Employee>employees = new ArrayList<>();
-//        employees.add(map.get("0003830814"));
-//        employees.add(map.get("0011401031"));
-//        employees.add(map.get("0006388485"));
-//        employees.add(map.get("0007381830"));
-//        employees.add(map.get("0007503145"));
-//        employees.add(map.get("0005148229"));
-//        employees.add(map.get("0006360843"));
-
-//
-//
-        
-        
-        
-       // System.out.println("ВЫВОД----------------ОБЪЕКТА");
-       //System.out.println(employee.getCode() + " " + employee.getSubdivision());
-
-      // System.out.println(employee.getCode() + " " + employee.getSubdivision());
-//        System.out.println(employee.getCode() + " " + employee.getSubdivision());
-//        System.out.println(employee.getCode() + " " + employee.getSubdivision());
-//        System.out.println(employee.getCode() + " " + employee.getSubdivision());
-
-     
-        //FileManagerDesktop.createTemplateFile(this,employee," ", dateTimeManager, mainFolder);
-
-//testDelete(ftpConnectionManager,ftpFileManager);
-
-//        for (Employee empl:employees) {
-//            FileManagerDesktop.createTemplateFile(this,empl,mainFolderName,dateTimeManager, mainFolder);
-//        }
-
-   // FileManagerDesktop.createTemplateFile(this,employee,mainFolderName,dateTimeManager, mainFolder);
-//        File firstFile1= new File(mainFolder,"2024/12.2024/AUP/416local.html");
-//        File firstFile2= new File(mainFolder,"2024/12.2024/AUP/427local.html");
-//        File firstFile3= new File(mainFolder,"2024/12.2024/AUP/427.html");
-//        File firstFile4= new File(mainFolder,"2024/12.2024/AUP/463local.html");
-//        File firstFile5= new File(mainFolder,"2024/12.2024/AUP/463.html");
-//        FileManagerDesktop.deleteFile(firstFile1);
-//        FileManagerDesktop.deleteFile(firstFile2);
-//        FileManagerDesktop.deleteFile(firstFile3);
-//        FileManagerDesktop.deleteFile(firstFile4);
-//        FileManagerDesktop.deleteFile(firstFile5);
-        //   File secondFile= new File(mainFolder,"/261.html");
-
-      //  System.out.println(FileManagerDesktop.readFileContenFromFile(secondFile));
-
-//        try {
-//            HtmlEditor.mergeFiles(this,firstFile,secondFile);
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-
-
-        File base = this.getExternalFilesDir(null); // Базовая директория приложения
-        File mainF = new File(base, mainFolderName+"/2024"+ "/12.2024");
-
-//File testRead= new File(mainF,"/C_4/392.html");
-//
-//        try {
-//            System.out.println(HtmlEditor.extractDataRowsFromFileOldVersion(testRead));
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-
-
-        //FileManagerDesktop.renameFile(TestFile.getAbsolutePath(),"TESTFILE");
-//
-//        List<String> relativePaths = new ArrayList<>();
-//
-//        // Получаем массив файлов
-//        List<File> files = collectFiles(mainF, "", relativePaths);
-//        System.out.println("---------------------------------------------------------------------------------");
-//        // Вывод относительных путей
-//        System.out.println("Относительные пути:");
-//        for (String path : relativePaths) {
-//            System.out.println(path);
-//        }
-//        System.out.println("---------------------------------------------------------------------------------");
-//
-//        // Вывод полного пути каждого файла
-//        System.out.println("\nАбсолютные пути файлов:");
-//        for (File file : files) {
-//            System.out.println(file.getAbsolutePath());
-//        }
-
-
-//
-//        new Thread(()->{
-//            FTPThreadTasks.uploadAllTmp(this,dateTimeManager);
-//        }).start();
-
-
-
-        System.out.println("TEST1");
-        System.out.println("TEST2");
-        String s = "TEST3";
-        System.out.println(s);
-        System.out.println("TEST4");
-
-
     }
-
-
 
 
     private void showDialog(String folderName, String fileName) {
@@ -250,45 +127,36 @@ CsvReader csvReader;
 
 
 
-
-    private void startUpdErrFile(File mainFolder) {
-        Runnable errUpdater = new Runnable() {
-            @Override
-            public void run() {
-                FTPConnectionManager ftpConnectionManagerErr = new FTPConnectionManager();
-                try {
-                    ftpConnectionManagerErr.connect(FTPConnectionManager.hostname);
-                    ftpConnectionManagerErr.login(FTPConnectionManager.user,FTPConnectionManager.password);
-                    FTPFileManager ftpFileManagerErr = new FTPFileManager(ftpConnectionManagerErr.getFtpClient());
-                    if ( ftpFileManagerErr.getCurrentWorkingDirectory()!="/settings"){
-                        ftpFileManagerErr.navigateToParentDirectory();
-                        ftpFileManagerErr.changeWorkingDirectory("settings/");
-                        File errFile = new File(mainFolder.getAbsolutePath(),"error.txt");
-                        if (ftpFileManagerErr.uploadFile(errFile.getAbsolutePath())){
-                            ftpConnectionManagerErr.disconnect();
-                        }
-                    }
-                }catch (Exception e){
-                   Log.e("errUpdater", "Some error in this method or connection troubles");
-                }finally {
-                    ftpConnectionManagerErr.disconnect();
-                }
-              // Перезапуск через 6 минут для времени
-                handler.postDelayed(this,360000);
-            }
-        };
-
-        // Запуск обновления
-        handler.post(errUpdater);
-    }
-
-
-
-
-
-
-
-
+//    private void startUpdErrFile(File mainFolder) {
+//        Runnable errUpdater = new Runnable() {
+//            @Override
+//            public void run() {
+//                FTPConnectionManager ftpConnectionManagerErr = new FTPConnectionManager();
+//                try {
+//                    ftpConnectionManagerErr.connect(FTPConnectionManager.hostname);
+//                    ftpConnectionManagerErr.login(FTPConnectionManager.user,FTPConnectionManager.password);
+//                    FTPFileManager ftpFileManagerErr = new FTPFileManager(ftpConnectionManagerErr.getFtpClient());
+//                    if ( ftpFileManagerErr.getCurrentWorkingDirectory()!="/settings"){
+//                        ftpFileManagerErr.navigateToParentDirectory();
+//                        ftpFileManagerErr.changeWorkingDirectory("settings/");
+//                        File errFile = new File(mainFolder.getAbsolutePath(),"error.txt");
+//                        if (ftpFileManagerErr.uploadFile(errFile.getAbsolutePath())){
+//                            ftpConnectionManagerErr.disconnect();
+//                        }
+//                    }
+//                }catch (Exception e){
+//                   Log.e("errUpdater", "Some error in this method or connection troubles");
+//                }finally {
+//                    ftpConnectionManagerErr.disconnect();
+//                }
+//              // Перезапуск через 6 минут для времени
+//                handler.postDelayed(this,360000);
+//            }
+//        };
+//
+//        // Запуск обновления
+//        handler.post(errUpdater);
+//    }
 
     private void startUpdatingTime() {
         timeUpdater = new Runnable() {
@@ -323,9 +191,6 @@ CsvReader csvReader;
             scheduler.shutdown();
         }
     }
-
-
-
 
     public synchronized void startUploadingFileEveryMinute(Context context,  String localFolderName, DateTimeManager dateTimeManager, ScheduledExecutorService scheduler) {
         Runnable task = new Runnable() {

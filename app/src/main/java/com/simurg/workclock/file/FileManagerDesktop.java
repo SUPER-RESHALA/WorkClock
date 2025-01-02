@@ -259,6 +259,58 @@ public class FileManagerDesktop {
 
 
 
+    public static String[] splitString(String input, String delimiter) {
+        if (input == null || delimiter == null) {
+            throw new IllegalArgumentException("Input string and delimiter cannot be null");
+        }
+        return input.split("\\Q" + delimiter + "\\E"); // \Q и \E экранируют разделитель
+    }
+
+
+
+    public static File createTemplateFileForQueue(Context context, Employee employee, String mainFolderName, DateTimeManager dateTimeManager, File mainFolder, String dateAndTime){
+        String[] workerInfo = splitString(dateAndTime, "|");
+        String currentYear=dateTimeManager.getYear();//+++++
+        String currentDate=workerInfo[2];
+        String currentMonthYear= dateTimeManager.getFormattedMonthYear();//+++++
+        String currentTime= workerInfo[1];
+        String subdivision= employee.getSubdivision();
+        String code =employee.getCode();
+        //String note= FileManagerDesktop.readFileContent(context,mainFolder.getName(),"id.txt");
+        String note= FileManagerDesktop.readFileContent(context,mainFolderName,"id.txt");
+        File yearFolder=  createCustomFolder(mainFolder,currentYear);
+        File monthYearFolder= createCustomFolder(yearFolder,currentMonthYear);
+        File subdivisionFolder = createCustomFolder(monthYearFolder,subdivision);
+        File htmlFile= new File(subdivisionFolder,code+".html");
+        HtmlEditor htmlEditor = new HtmlEditor(context,"template.html");
+        if (!htmlFile.exists()){
+            String template= htmlEditor.loadTemplate();
+            String finalContent = htmlEditor.addNewRowToHtml(template,code,currentDate,currentTime,note);
+            htmlFile = createFileInCustomFolder(subdivisionFolder,htmlFile.getName(),finalContent);
+        }else {
+            String htmlFileContent= readFileContenFromFile(htmlFile);
+            //System.out.println(htmlFileContent);
+            String finalContent= htmlEditor.addNewRowToHtml(htmlFileContent,code,currentDate,currentTime,note);
+            htmlFile = createFileInCustomFolder(subdivisionFolder,htmlFile.getName(),finalContent);
+        }
+        return htmlFile;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     public static File createTemplateFile(Context context, Employee employee, String mainFolderName, DateTimeManager dateTimeManager, File mainFolder){
@@ -342,5 +394,7 @@ public class FileManagerDesktop {
         deleteFile(files.get(i));
      }
     }
+
+
 
 }

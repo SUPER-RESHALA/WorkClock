@@ -5,6 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#000000"
     tools:context=".MainActivity">
 
     <View
@@ -23,8 +24,8 @@
         android:layout_marginEnd="164dp"
         android:layout_marginBottom="422dp"
         android:gravity="center"
-        android:textSize="30sp"
-        android:text="00:00:00" />
+        android:text="00:00:00"
+        android:textSize="30sp" />
 
     <TextView
         android:id="@+id/dateMain"
@@ -35,8 +36,8 @@
         android:layout_marginEnd="280dp"
         android:layout_marginBottom="285dp"
         android:gravity="center"
-         android:textSize="30sp"
-        android:text="01.01.2024" />
+        android:text="01.01.2024"
+        android:textSize="30sp" />
 
     <TextView
         android:id="@+id/instructor"
@@ -55,8 +56,7 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_marginEnd="366dp"
-        android:layout_marginBottom="431dp"
-        android:text="TextView" />
+        android:layout_marginBottom="431dp" />
 
     <TextView
         android:id="@+id/recordedTime"
@@ -65,8 +65,7 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_marginEnd="411dp"
-        android:layout_marginBottom="516dp"
-        android:text="TextView" />
+        android:layout_marginBottom="516dp" />
 
     <TextView
         android:id="@+id/textReg"
@@ -116,19 +115,5 @@
 
         tools:visibility="gone" />
 
-
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="126dp"
-        android:layout_height="100dp"
-        android:layout_alignBottom="@+id/cardNumRFID"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginStart="-2dp"
-        android:layout_marginTop="-7dp"
-        android:layout_marginEnd="1155dp"
-        android:layout_marginBottom="-92dp"
-        app:srcCompat="@android:drawable/ic_notification_overlay" />
 
 </RelativeLayout>

@@ -104,6 +104,7 @@ String TAG="checkCardFileModify";
         Log.e(TAG, "Ошибка при проверке или загрузке файла: " + e.getMessage(), e);
         if (csvReader.checkIsUpdating()){csvReader.finishUpdate();}
     }finally {
+        ftpConnectionManager.logout();
         ftpConnectionManager.disconnect();
         Log.i(TAG, "Соединение с FTP-сервером закрыто.");
         if (csvReader.checkIsUpdating()){csvReader.finishUpdate();}
@@ -150,6 +151,7 @@ String TAG="checkCardFileModify";
                 } catch (Exception e) {
                     Log.e("sendFileToFtp", "Ошибка при работе с FTP: " + e.getMessage(), e);
                 } finally {
+                    ftpConnectionManager.logout();
                     ftpConnectionManager.disconnect();
                 }
             }).start();
@@ -203,6 +205,7 @@ String TAG="checkCardFileModify";
              }
          }//for
           if (ftpConnectionManager.isConnected()){
+              ftpConnectionManager.logout();
               ftpConnectionManager.disconnect();
           }
         } catch (IOException e) {
@@ -213,6 +216,110 @@ String TAG="checkCardFileModify";
             FileManagerDesktop.deleteAllTmp(context,dateTimeManager);
         }
     }// end of method uploadTmp
+
+//public static boolean uploadErrorFile(Context context, DateTimeManager dateTimeManager){
+//    FTPConnectionManager ftpConnectionManager = new FTPConnectionManager();
+//    FTPFileManager ftpFileManager = new FTPFileManager(ftpConnectionManager.getFtpClient());
+//    String mainFolderName ="WorkClockFiles";
+//    String currentYear= dateTimeManager.getYear();
+//    String currentMonthYear= dateTimeManager.getFormattedMonthYear();
+//    String ftpMonthDir=  currentYear+ "/"+currentMonthYear+"/";
+//    File baseDir = context.getExternalFilesDir(null); // Базовая директория приложения
+//    File mainFolder = new File(baseDir, mainFolderName);
+//    File errorFile= new File(mainFolder,"error.txt");
+//    String fileContent=FileManagerDesktop.readFileContenFromFile(errorFile);
+//    File errorFolder = new File(mainFolder,"ErrorFolder");
+//    File remoteErrorFile = new File(errorFolder, "error.txt");
+//    if (!errorFolder.exists()){
+//        FileManagerDesktop.createCustomFolder(mainFolder,errorFolder.getName());
+//    }
+//    long remoteFileSize=-1;
+//    try{
+//        ftpConnectionManager.connect(FTPConnectionManager.hostname);
+//        ftpConnectionManager.login(FTPConnectionManager.user,FTPConnectionManager.password);
+//       ftpFileManager.moveCurrentDir(ftpFileManager,ftpMonthDir);
+//      if (ftpFileManager.fileExists(errorFile.getName())){
+//                ftpFileManager.downloadFile(errorFile.getName(), errorFolder.getAbsolutePath());
+//               remoteFileSize= remoteErrorFile.length();
+//               FileManagerDesktop.writeToFile(remoteErrorFile,"\n"+fileContent);
+//              return ftpFileManager.uploadFile(remoteErrorFile.getAbsolutePath());
+//
+//      }else {
+//          return ftpFileManager.uploadFile(errorFile.getAbsolutePath());
+//      }
+//
+//
+//    } catch (Exception e) {
+//        throw new RuntimeException(e);
+//    }finally {
+//        ftpConnectionManager.logout();
+//        ftpConnectionManager.disconnect();
+//    }
+//}
+
+    public static boolean uploadErrorFile(Context context, DateTimeManager dateTimeManager) {
+        FTPConnectionManager ftpConnectionManager = new FTPConnectionManager();
+        FTPFileManager ftpFileManager = new FTPFileManager(ftpConnectionManager.getFtpClient());
+        String mainFolderName = "WorkClockFiles";
+        String currentYear = dateTimeManager.getYear();
+        String currentMonthYear = dateTimeManager.getFormattedMonthYear();
+        String ftpMonthDir = currentYear + "/" + currentMonthYear + "/";
+        File baseDir = context.getExternalFilesDir(null);
+        File mainFolder = new File(baseDir, mainFolderName);
+        File errorFile = new File(mainFolder, "error.txt");
+        String fileContent = FileManagerDesktop.readFileContenFromFile(errorFile);
+        File errorFolder = new File(mainFolder, "ErrorFolder");
+        File localErrorFile = new File(errorFolder, "error.txt");
+
+        if (!errorFolder.exists()) {
+            FileManagerDesktop.createCustomFolder(mainFolder, errorFolder.getName());
+        }
+
+        try {
+            ftpConnectionManager.connect(FTPConnectionManager.hostname);
+            ftpConnectionManager.login(FTPConnectionManager.user, FTPConnectionManager.password);
+            ftpFileManager.moveCurrentDir(ftpFileManager, ftpMonthDir);
+
+            boolean success = false;
+
+            while (true) {
+                if (ftpFileManager.fileExists(errorFile.getName())) {
+                    // Шаг 1: Скачать файл и зафиксировать размер
+                    ftpFileManager.downloadFile(errorFile.getName(), errorFolder.getAbsolutePath());
+                    long remoteFileSizeBefore = localErrorFile.length();
+
+                    // Шаг 2: Локально объединить содержимое
+                    FileManagerDesktop.writeToFile(localErrorFile, "\n" + fileContent);
+
+                    // Шаг 3: Проверить, изменился ли файл на сервере
+                    long remoteFileSizeAfter = ftpFileManager.getFileSize(errorFile.getName(),ftpConnectionManager.getFtpClient());
+                    if (remoteFileSizeAfter != remoteFileSizeBefore) {
+                        // Если файл изменился, повторяем загрузку
+                        continue; // Вернуться к началу цикла для повторной загрузки
+                    }
+
+                    // Шаг 4: Загрузить обновленный файл
+                    success = ftpFileManager.uploadFile(localErrorFile.getAbsolutePath());
+                } else {
+                    // Если файл не существует, загружаем напрямую
+                    success = ftpFileManager.uploadFile(errorFile.getAbsolutePath());
+                }
+
+                break; // Успешно завершили, выходим из цикла
+            }
+
+            return success;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка при загрузке файла: " + e.getMessage(), e);
+        } finally {
+            ftpConnectionManager.logout();
+            ftpConnectionManager.disconnect();
+        }
+    }
+
+
+
 
 
 }//end of Class
