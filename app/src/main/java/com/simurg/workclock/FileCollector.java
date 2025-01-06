@@ -1,5 +1,7 @@
 package com.simurg.workclock;
 
+import com.simurg.workclock.data.DateTimeManager;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -73,13 +75,15 @@ public class FileCollector {
         return collectedFiles;
     }
 
+
+
     /**
      * Рекурсивно собирает пути всех файлов и возвращает список файлов.
      *
      * @param folder Начальная папка.
      * @return Список файлов.
      */
-    public static List<File> collectFiles2(File folder) {
+    public static List<File> collectOnlyFiles(File folder) {
         List<File> collectedFiles = new ArrayList<>();
 
         if (folder == null || !folder.exists()) {
@@ -97,7 +101,7 @@ public class FileCollector {
                 collectedFiles.add(fileOrDir);
             } else if (fileOrDir.isDirectory()) {
                 // Рекурсивно обходим вложенные директории
-                collectedFiles.addAll(collectFiles2(fileOrDir));
+                collectedFiles.addAll(collectOnlyFiles(fileOrDir));
             }
         }
 

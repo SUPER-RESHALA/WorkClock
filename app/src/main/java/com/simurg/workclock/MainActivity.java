@@ -6,6 +6,7 @@ import static com.simurg.workclock.FileCollector.collectFiles;
 import static com.simurg.workclock.ftp.FTPThreadTasks.sendFileToFtp;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -68,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
     private FTPConnectionManager ftpConnectionManager;
     private ScheduledExecutorService scheduler;
     private static String mainFolderName = "WorkClockFiles";
+    private ScheduledExecutorService mainSheduler;
     DataQueueManager dataQueueManager;
 CsvReader csvReader;
     private FTPFileManager ftpFileManager;
@@ -85,30 +87,38 @@ CsvReader csvReader;
         String filePath = this.getExternalFilesDir(null) + "/WorkClockFiles/cards.csv";
         File baseDir = this.getExternalFilesDir(null); // Базовая директория приложения
         File mainFolder = new File(baseDir, mainFolderName);
-dataQueueManager= new DataQueueManager();
+        dataQueueManager= new DataQueueManager();
         csvReader= new CsvReader();
         threadManager = new ThreadManager();
         rfidNumber = findViewById(R.id.cardNumRFID);
         rfidNumber.setFocusable(true);
         rfidNumber.setFocusableInTouchMode(true);
-        rfidNumber.setInputType(InputType.TYPE_NULL);
+        //Важная строка ниже ее потом влкючить
+         rfidNumber.setInputType(InputType.TYPE_NULL);
         timeMain = findViewById(R.id.timeMain);
         dateMain = findViewById(R.id.dateMain);
         dateTimeManager = new DateTimeManager();
         timeMain.setText(dateTimeManager.getFormattedTime());
         dateMain.setText(dateTimeManager.getFormattedDate());
         RFIDHandler rfidHandler = new RFIDHandler();
-      rfidHandler.RFIDInputHandler(rfidNumber, this, dateTimeManager,mainFolderName, mainFolder, csvReader,dataQueueManager);
+        FileManagerDesktop.deleteAllTmp(this,dateTimeManager);
+        rfidHandler.RFIDInputHandler(rfidNumber, this, dateTimeManager,mainFolderName, mainFolder, csvReader,dataQueueManager);
         handler = new Handler();
         // Запускаем обновление времени каждую секунду
         startUpdatingTime();
       scheduler = Executors.newSingleThreadScheduledExecutor();
+      mainSheduler = Executors.newScheduledThreadPool(2);
      startUploadingFileEveryMinute(this, "WorkClockFiles", dateTimeManager, scheduler);
-
-
+     //  FileManagerDesktop.renameAllTmp(mainFolder,dateTimeManager);
+  //   Map<String, Employee> map =csvReader.readCsvToMap(filePath);
+    // FileManagerDesktop.createTemplateFile(this,map.get("0009771047"),mainFolderName,dateTimeManager,mainFolder);
+      //FileManagerDesktop.createTemplateFile(this,map.get("0003830814"),mainFolderName,dateTimeManager,mainFolder);
+startMainTasks(this,this,dateTimeManager,dataQueueManager,rfidHandler,csvReader,mainFolderName,mainFolder);
     }
-
-
+public void startMainTasks(Activity activity, Context context, DateTimeManager dateTimeManager, DataQueueManager dataQueueManager, RFIDHandler rfidHandler, CsvReader csvReader, String mainFolderName, File mainFolder){
+        mainSheduler.scheduleWithFixedDelay(FTPThreadTasks.cardTask(context,csvReader),0,2,TimeUnit.MINUTES);
+        mainSheduler.scheduleWithFixedDelay(FTPThreadTasks.uploadTmpAndErrorTask(activity,context,dateTimeManager,dataQueueManager,rfidHandler,csvReader,mainFolderName,mainFolder),2,3,TimeUnit.MINUTES);
+}
     private void showDialog(String folderName, String fileName) {
 
         File folder = new File(getExternalFilesDir(null), folderName);
@@ -124,39 +134,6 @@ dataQueueManager= new DataQueueManager();
         }
 
     }
-
-
-
-//    private void startUpdErrFile(File mainFolder) {
-//        Runnable errUpdater = new Runnable() {
-//            @Override
-//            public void run() {
-//                FTPConnectionManager ftpConnectionManagerErr = new FTPConnectionManager();
-//                try {
-//                    ftpConnectionManagerErr.connect(FTPConnectionManager.hostname);
-//                    ftpConnectionManagerErr.login(FTPConnectionManager.user,FTPConnectionManager.password);
-//                    FTPFileManager ftpFileManagerErr = new FTPFileManager(ftpConnectionManagerErr.getFtpClient());
-//                    if ( ftpFileManagerErr.getCurrentWorkingDirectory()!="/settings"){
-//                        ftpFileManagerErr.navigateToParentDirectory();
-//                        ftpFileManagerErr.changeWorkingDirectory("settings/");
-//                        File errFile = new File(mainFolder.getAbsolutePath(),"error.txt");
-//                        if (ftpFileManagerErr.uploadFile(errFile.getAbsolutePath())){
-//                            ftpConnectionManagerErr.disconnect();
-//                        }
-//                    }
-//                }catch (Exception e){
-//                   Log.e("errUpdater", "Some error in this method or connection troubles");
-//                }finally {
-//                    ftpConnectionManagerErr.disconnect();
-//                }
-//              // Перезапуск через 6 минут для времени
-//                handler.postDelayed(this,360000);
-//            }
-//        };
-//
-//        // Запуск обновления
-//        handler.post(errUpdater);
-//    }
 
     private void startUpdatingTime() {
         timeUpdater = new Runnable() {
@@ -208,5 +185,4 @@ dataQueueManager= new DataQueueManager();
         scheduler.scheduleWithFixedDelay(task, 0, 1, TimeUnit.MINUTES);
 
     }
-
 }

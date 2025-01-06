@@ -64,6 +64,9 @@ public class HtmlEditor {
                 code, date, time, note
         );
 int indexOfTableTag=finalContent.indexOf("</table>");
+        if (indexOfTableTag == -1) {
+            throw new IllegalArgumentException("HTML content does not contain </table> tag");
+        }
 StringBuilder stringBuilder=new StringBuilder(finalContent);
 stringBuilder.insert(indexOfTableTag,newRow);
         return stringBuilder.toString();
@@ -76,14 +79,6 @@ stringBuilder.insert(indexOfTableTag,newRow);
         stringBuilder.insert(indexOfTableTag,rowsToAdd);
         return stringBuilder.toString();
     }
-
-
-
-
-
-
-
-
 
     public static String extractDataRowsFromFileOldVersion(File htmlFile) throws IOException {
         StringBuilder dataRows = new StringBuilder();
@@ -108,42 +103,6 @@ stringBuilder.insert(indexOfTableTag,newRow);
 
         return dataRows.toString();
     }
-
-
-
-
-
-
-
-
-//    public static String extractDataRowsFromFile(File htmlFile) throws IOException {
-//        StringBuilder dataRows = new StringBuilder();
-//
-//        // Парсинг HTML-файла
-//        Document document = Jsoup.parse(htmlFile, "UTF-8");
-//
-//        // Поиск таблицы с данными
-//        Element table = document.selectFirst("table#center table");
-//        if (table == null) {
-//            throw new IOException("Таблица не найдена в файле: " + htmlFile.getName());
-//        }
-//
-//        // Получение всех строк, кроме заголовков
-//        Elements rows = table.select("tr:gt(1)"); // Пропускаем первые 2 строки (заголовок)
-//
-//        // Объединение строк в одну строку
-//        for (Element row : rows) {
-//            dataRows.append(row.outerHtml()).append("\n");
-//        }
-//
-//        return dataRows.toString();
-//    }
-
-
-
-
-
-
 
     public static String extractDataRowsFromString(String htmlContent) {
         // Парсим HTML строку в Document

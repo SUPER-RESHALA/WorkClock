@@ -5,6 +5,7 @@ import static com.simurg.workclock.FileCollector.collectFiles;
 import android.content.Context;
 import android.util.Log;
 
+import com.simurg.workclock.FileCollector;
 import com.simurg.workclock.data.DateTimeManager;
 import com.simurg.workclock.entity.Employee;
 import com.simurg.workclock.template.HtmlEditor;
@@ -297,22 +298,6 @@ public class FileManagerDesktop {
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     public static File createTemplateFile(Context context, Employee employee, String mainFolderName, DateTimeManager dateTimeManager, File mainFolder){
     String currentYear=dateTimeManager.getYear();
     String currentDate=dateTimeManager.getFormattedDate();
@@ -333,7 +318,6 @@ public class FileManagerDesktop {
          htmlFile = createFileInCustomFolder(subdivisionFolder,htmlFile.getName(),finalContent);
       }else {
          String htmlFileContent= readFileContenFromFile(htmlFile);
-          //System.out.println(htmlFileContent);
          String finalContent= htmlEditor.addNewRowToHtml(htmlFileContent,code,currentDate,currentTime,note);
           htmlFile = createFileInCustomFolder(subdivisionFolder,htmlFile.getName(),finalContent);
       }
@@ -390,11 +374,85 @@ public class FileManagerDesktop {
         File mainF = new File(baseDir, mainFolderName+"/" + currentYear+ "/"+currentMonthYear);
         List<String> relativePaths = new ArrayList<>();
         List<File> files = collectFiles(mainF, "", relativePaths);
+        if (files.isEmpty()){
+            return;
+        }
      for (int i=0; i< files.size();i++){
         deleteFile(files.get(i));
      }
     }
 
 
+    public static  boolean delFinalFiles(File mainFolder, DateTimeManager dateTimeManager){
+        String currentYear= dateTimeManager.getYear()+"/";
+        String currentMonthYear= dateTimeManager.getFormattedMonthYear()+"/";
+        String path= currentYear+currentMonthYear;
+        File mainTmpFolder= new File(mainFolder, path);
+        List<File> allTmpFiles= FileCollector.collectOnlyFiles(mainTmpFolder);
+        if (allTmpFiles.isEmpty()){
+            return false;
+        }
+        for (File file: allTmpFiles) {
+            if (!file.getName().contains("local")){
+               if (!FileManagerDesktop.deleteFile(file)){
+                   return false;
+               }
+            }
+        }
+        return true;
+    }
 
+
+    public static boolean renameAllTmp(File mainFolder, DateTimeManager dateTimeManager) {
+        String currentYear = dateTimeManager.getYear() + "/";
+        String currentMonthYear = dateTimeManager.getFormattedMonthYear() + "/";
+        String path = currentYear + currentMonthYear;
+        File mainTmpFolder = new File(mainFolder, path);
+
+        // Удаляем ненужные файлы перед переименованием
+        if (!delFinalFiles(mainFolder, dateTimeManager)) {
+            Log.e("renameAllTmp", "Ошибка при удалении временных файлов.");
+            return false;
+        }
+
+        // Сбор всех файлов
+        List<File> allTmpFiles = FileCollector.collectOnlyFiles(mainTmpFolder);
+        boolean allRenamedSuccessfully = true;
+if (allTmpFiles.isEmpty()){
+    return false;
 }
+        for (File file : allTmpFiles) {
+            if (file.getName().endsWith("local.html")) {
+                String newName = file.getName().replace("local.html", ".html");
+                // File renamedFile = new File(file.getParent(), newName);
+               boolean success= FileManagerDesktop.renameFile(file.getAbsolutePath(),newName);
+               // boolean success = file.renameTo(renamedFile);
+                if (success) {
+                    Log.i("renameAllTmp", "Файл " + file.getName() + " переименован в " + newName);
+                } else {
+                    Log.e("renameAllTmp", "Не удалось переименовать файл: " + file.getName());
+                    allRenamedSuccessfully = false; // Если хоть один файл не удалось переименовать
+                }
+            }
+        }
+
+        return allRenamedSuccessfully; // Возвращаем true только если все файлы успешно переименованы
+    }
+
+//       //   File baseDir = context.getExternalFilesDir(null); // Базовая директория приложения
+//         File logFolder= new File(mainFolder, "HTMLFinalContent");
+//         File htmlFileTest= new File(logFolder,"HtmlLogs.txt");
+//         if (!logFolder.exists()){
+//             FileManagerDesktop.createCustomFolder(mainFolder,logFolder.getName());
+//         }
+//         if (logFolder.exists()){
+//             if (!htmlFileTest.exists()){
+//                 FileManagerDesktop.createFileInCustomFolder(logFolder,htmlFileTest.getName(),htmlFileContent+"  "+dateTimeManager.getFormattedTime());
+//             }else {
+//                 FileManagerDesktop.writeToFile(htmlFileTest,"\n\n\n\n\n\n\n\n\nNew ROW New ROW New ROW New ROW New ROW New ROW\n"+ htmlFileContent+"  "+dateTimeManager.getFormattedTime());
+//             }
+//         }
+//
+//          System.out.println(htmlFileContent);
+
+}//endOfClass

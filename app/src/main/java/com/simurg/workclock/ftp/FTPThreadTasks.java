@@ -2,13 +2,16 @@ package com.simurg.workclock.ftp;
 
 import static com.simurg.workclock.FileCollector.collectFiles;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.simurg.workclock.RFIDHandler;
 import com.simurg.workclock.data.DateTimeManager;
 import com.simurg.workclock.file.CsvReader;
+import com.simurg.workclock.file.DataQueueManager;
 import com.simurg.workclock.file.FileManagerDesktop;
 import com.simurg.workclock.network.NetworkUtils;
 import com.simurg.workclock.template.HtmlEditor;
@@ -213,49 +216,9 @@ String TAG="checkCardFileModify";
             throw new RuntimeException(e);
         }
         if (allFilesUploaded){
-            FileManagerDesktop.deleteAllTmp(context,dateTimeManager);
+          //  FileManagerDesktop.deleteAllTmp(context,dateTimeManager);
         }
     }// end of method uploadTmp
-
-//public static boolean uploadErrorFile(Context context, DateTimeManager dateTimeManager){
-//    FTPConnectionManager ftpConnectionManager = new FTPConnectionManager();
-//    FTPFileManager ftpFileManager = new FTPFileManager(ftpConnectionManager.getFtpClient());
-//    String mainFolderName ="WorkClockFiles";
-//    String currentYear= dateTimeManager.getYear();
-//    String currentMonthYear= dateTimeManager.getFormattedMonthYear();
-//    String ftpMonthDir=  currentYear+ "/"+currentMonthYear+"/";
-//    File baseDir = context.getExternalFilesDir(null); // Базовая директория приложения
-//    File mainFolder = new File(baseDir, mainFolderName);
-//    File errorFile= new File(mainFolder,"error.txt");
-//    String fileContent=FileManagerDesktop.readFileContenFromFile(errorFile);
-//    File errorFolder = new File(mainFolder,"ErrorFolder");
-//    File remoteErrorFile = new File(errorFolder, "error.txt");
-//    if (!errorFolder.exists()){
-//        FileManagerDesktop.createCustomFolder(mainFolder,errorFolder.getName());
-//    }
-//    long remoteFileSize=-1;
-//    try{
-//        ftpConnectionManager.connect(FTPConnectionManager.hostname);
-//        ftpConnectionManager.login(FTPConnectionManager.user,FTPConnectionManager.password);
-//       ftpFileManager.moveCurrentDir(ftpFileManager,ftpMonthDir);
-//      if (ftpFileManager.fileExists(errorFile.getName())){
-//                ftpFileManager.downloadFile(errorFile.getName(), errorFolder.getAbsolutePath());
-//               remoteFileSize= remoteErrorFile.length();
-//               FileManagerDesktop.writeToFile(remoteErrorFile,"\n"+fileContent);
-//              return ftpFileManager.uploadFile(remoteErrorFile.getAbsolutePath());
-//
-//      }else {
-//          return ftpFileManager.uploadFile(errorFile.getAbsolutePath());
-//      }
-//
-//
-//    } catch (Exception e) {
-//        throw new RuntimeException(e);
-//    }finally {
-//        ftpConnectionManager.logout();
-//        ftpConnectionManager.disconnect();
-//    }
-//}
 
     public static boolean uploadErrorFile(Context context, DateTimeManager dateTimeManager) {
         FTPConnectionManager ftpConnectionManager = new FTPConnectionManager();
@@ -267,10 +230,14 @@ String TAG="checkCardFileModify";
         File baseDir = context.getExternalFilesDir(null);
         File mainFolder = new File(baseDir, mainFolderName);
         File errorFile = new File(mainFolder, "error.txt");
-        String fileContent = FileManagerDesktop.readFileContenFromFile(errorFile);
+        String fileContent;
+        //String fileContent=FileManagerDesktop.readFileContenFromFile(errorFile);
         File errorFolder = new File(mainFolder, "ErrorFolder");
         File localErrorFile = new File(errorFolder, "error.txt");
-
+if (!errorFile.exists()|| errorFile.length()==0){
+    Log.e("uploadErrorFile", "Desktop Error File not existed");
+    return false;
+}
         if (!errorFolder.exists()) {
             FileManagerDesktop.createCustomFolder(mainFolder, errorFolder.getName());
         }
@@ -284,8 +251,9 @@ String TAG="checkCardFileModify";
 
             while (true) {
                 if (ftpFileManager.fileExists(errorFile.getName())) {
+                    fileContent=FileManagerDesktop.readFileContenFromFile(errorFile);
                     // Шаг 1: Скачать файл и зафиксировать размер
-                    ftpFileManager.downloadFile(errorFile.getName(), errorFolder.getAbsolutePath());
+                    ftpFileManager.downloadFile(errorFile.getName(), localErrorFile.getAbsolutePath());
                     long remoteFileSizeBefore = localErrorFile.length();
 
                     // Шаг 2: Локально объединить содержимое
@@ -307,7 +275,10 @@ String TAG="checkCardFileModify";
 
                 break; // Успешно завершили, выходим из цикла
             }
-
+            if (success){
+                FileManagerDesktop.deleteFile(errorFile);
+                FileManagerDesktop.deleteFile(localErrorFile);
+            }
             return success;
 
         } catch (Exception e) {
@@ -318,8 +289,112 @@ String TAG="checkCardFileModify";
         }
     }
 
+    public static void uploadAllTmpWithValidation(Context context, DateTimeManager dateTimeManager) {
+        FTPConnectionManager ftpConnectionManager = new FTPConnectionManager();
+        FTPFileManager ftpFileManager = new FTPFileManager(ftpConnectionManager.getFtpClient());
+        String mainFolderName = "WorkClockFiles";
+        String currentYear = dateTimeManager.getYear();
+        String currentMonthYear = dateTimeManager.getFormattedMonthYear();
+        String ftpMonthDir = currentYear + "/" + currentMonthYear;
+        File baseDir = context.getExternalFilesDir(null); // Базовая директория приложения
+        File mainF = new File(baseDir, mainFolderName + "/" + currentYear + "/" + currentMonthYear);
+        List<String> relativePaths = new ArrayList<>(); // относительные пути файлов
+        List<File> files = collectFiles(mainF, "", relativePaths);
 
+        if (relativePaths.isEmpty() || files.isEmpty()) {
+            Log.i("uploadAllTmp", "Нет временных файлов");
+            return;
+        }
 
+        boolean allFilesUploaded = true;
 
+        try {
+            ftpConnectionManager.connect(FTPConnectionManager.hostname);
+            ftpConnectionManager.login(FTPConnectionManager.user, FTPConnectionManager.password);
+
+            for (int i = 0; i < files.size(); i++) {
+                String relativePath = relativePaths.get(i);
+                String fullPath = ftpMonthDir + relativePath.substring(0, relativePath.lastIndexOf("/"));
+                File currentFile = files.get(i);
+                String fileName = currentFile.getName();
+
+                ftpFileManager.moveCurrentDir(ftpFileManager, fullPath);
+
+                if (ftpFileManager.fileExists(fileName)) {
+                    String localFileName = fileName.substring(0, fileName.indexOf(".")) + "local.html";
+                    File localFile = new File(currentFile.getParent(), localFileName);
+                    File mergedFile = new File(currentFile.getParent(), fileName);
+
+                    FileManagerDesktop.renameFile(currentFile.getAbsolutePath(), localFileName);
+
+                    // Первый скачанный размер файла
+                    long initialServerFileSize = ftpFileManager.getFileSize(fileName,ftpConnectionManager.getFtpClient());
+                    ftpFileManager.downloadFile(fileName, mergedFile.getAbsolutePath());
+                    HtmlEditor.mergeFiles(context, localFile, mergedFile);
+                    while (true) {
+                        long currentServerFileSize = ftpFileManager.getFileSize(fileName,ftpConnectionManager.getFtpClient());
+                        if (currentServerFileSize != initialServerFileSize) {
+                            // Серверный файл изменился, повторяем скачивание и склейку
+                            ftpFileManager.downloadFile(fileName, mergedFile.getAbsolutePath());
+                            HtmlEditor.mergeFiles(context, localFile, mergedFile);
+                            initialServerFileSize = currentServerFileSize; // Обновляем эталонный вес
+                        } else {
+                            // Серверный файл не изменился, загружаем обновленный файл
+                            ftpFileManager.uploadFile(mergedFile.getAbsolutePath());
+                            break;
+                        }
+                    }
+
+                } else {
+                    // Файл отсутствует на сервере, загружаем
+                    ftpFileManager.uploadFile(currentFile.getAbsolutePath());
+                }
+            }
+
+            if (ftpConnectionManager.isConnected()) {
+                ftpConnectionManager.logout();
+                ftpConnectionManager.disconnect();
+            }
+
+        } catch (IOException e) {
+            allFilesUploaded = false;
+            throw new RuntimeException(e);
+        }
+
+        if (allFilesUploaded) {
+            FileManagerDesktop.deleteAllTmp(context, dateTimeManager);
+        }
+    }
+
+    public static Runnable cardTask(Context context, CsvReader csvReader) {
+        return () -> {
+            checkCardFileModify(context,csvReader);
+        };
+    }
+    public static Runnable uploadTmpAndErrorTask(Activity activity, Context context, DateTimeManager dateTimeManager, DataQueueManager dataQueueManager, RFIDHandler rfidHandler, CsvReader csvReader, String mainFolderName, File mainFolder ) {
+        return () -> {
+            try {
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context,"НАЧАТА СИНХРОНИЗАЦИЯ С СЕРВЕРОМ, НЕ ОТКЛЮЧАЙТЕ ПРИЛОЖЕНИЕ", Toast.LENGTH_LONG);
+                    }
+                });
+                dataQueueManager.startSync();
+                uploadAllTmpWithValidation(context,dateTimeManager);
+                uploadErrorFile(context,dateTimeManager);
+            } catch (RuntimeException e) {
+                throw new RuntimeException(e);
+            }finally {
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context,"СИНХРОНИЗАЦИЯ ЗАВЕРШЕНА, ПОВТОР ЧЕРЕЗ 3 МИНУТЫ ", Toast.LENGTH_LONG);
+                    }
+                });
+                dataQueueManager.finishSyncAndProcessQueue(rfidHandler,activity,dateTimeManager,mainFolderName,mainFolder,csvReader);
+            }
+            };
+    }
 
 }//end of Class
