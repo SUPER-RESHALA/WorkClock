@@ -3,7 +3,7 @@
     <string name="DialogSubminBtn">Подтвердить</string>
     <string name="DialogHeaderText">Введите номер к которому будет привязано данное устройство</string>
     <string name="DialogEnterHint">Номер устройства</string>
-    <string name="instr">Для регистрации времени поднесите карту с идентификатором к считывателю карт.</string>
+    <string name="instr">Для регистрации времени поднесите карту с идентификатором к считывателю.</string>
     <string name="timeReg">Время зафиксировано</string>
     <string name="timeUnReg">Ошибка чтения. Данный идентификатор не является идентификатором организации</string>
     <string name="hostname">ftp.simurg.by</string>
