@@ -71,8 +71,10 @@ public class MainActivity extends AppCompatActivity {
     private static String mainFolderName = "WorkClockFiles";
     private ScheduledExecutorService mainSheduler;
     DataQueueManager dataQueueManager;
+    RFIDHandler rfidHandler;
 CsvReader csvReader;
     private FTPFileManager ftpFileManager;
+    File mainFolder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +88,7 @@ CsvReader csvReader;
         showDialog("WorkClockFiles", "id.txt");
         String filePath = this.getExternalFilesDir(null) + "/WorkClockFiles/cards.csv";
         File baseDir = this.getExternalFilesDir(null); // Базовая директория приложения
-        File mainFolder = new File(baseDir, mainFolderName);
+        mainFolder = new File(baseDir, mainFolderName);
         dataQueueManager= new DataQueueManager();
         csvReader= new CsvReader();
         threadManager = new ThreadManager();
@@ -100,24 +102,36 @@ CsvReader csvReader;
         dateTimeManager = new DateTimeManager();
         timeMain.setText(dateTimeManager.getFormattedTime());
         dateMain.setText(dateTimeManager.getFormattedDate());
-        RFIDHandler rfidHandler = new RFIDHandler();
-        FileManagerDesktop.deleteAllTmp(this,dateTimeManager);
+         rfidHandler = new RFIDHandler();
+         FileManagerDesktop.deleteAllTmp(this,dateTimeManager);
         rfidHandler.RFIDInputHandler(rfidNumber, this, dateTimeManager,mainFolderName, mainFolder, csvReader,dataQueueManager);
         handler = new Handler();
         // Запускаем обновление времени каждую секунду
         startUpdatingTime();
       scheduler = Executors.newSingleThreadScheduledExecutor();
-      mainSheduler = Executors.newScheduledThreadPool(2);
+     // mainSheduler = Executors.newScheduledThreadPool(2);
      startUploadingFileEveryMinute(this, "WorkClockFiles", dateTimeManager, scheduler);
-     //  FileManagerDesktop.renameAllTmp(mainFolder,dateTimeManager);
   //   Map<String, Employee> map =csvReader.readCsvToMap(filePath);
     // FileManagerDesktop.createTemplateFile(this,map.get("0009771047"),mainFolderName,dateTimeManager,mainFolder);
       //FileManagerDesktop.createTemplateFile(this,map.get("0003830814"),mainFolderName,dateTimeManager,mainFolder);
-startMainTasks(this,this,dateTimeManager,dataQueueManager,rfidHandler,csvReader,mainFolderName,mainFolder);
+
+       // startMainTasks(this,this,dateTimeManager,dataQueueManager,rfidHandler,csvReader,mainFolderName,mainFolder);
     }
-public void startMainTasks(Activity activity, Context context, DateTimeManager dateTimeManager, DataQueueManager dataQueueManager, RFIDHandler rfidHandler, CsvReader csvReader, String mainFolderName, File mainFolder){
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Проверяем состояние mainSheduler перед его созданием
+        if (mainSheduler == null || mainSheduler.isShutdown()) {
+            mainSheduler = Executors.newScheduledThreadPool(2);
+            startMainTasks(this, this, dateTimeManager, dataQueueManager, rfidHandler, csvReader, mainFolderName, mainFolder);
+        }
+    }
+
+
+    public void startMainTasks(Activity activity, Context context, DateTimeManager dateTimeManager, DataQueueManager dataQueueManager, RFIDHandler rfidHandler, CsvReader csvReader, String mainFolderName, File mainFolder){
         mainSheduler.scheduleWithFixedDelay(FTPThreadTasks.cardTask(context,csvReader),0,2,TimeUnit.MINUTES);
-        mainSheduler.scheduleWithFixedDelay(FTPThreadTasks.uploadTmpAndErrorTask(activity,context,dateTimeManager,dataQueueManager,rfidHandler,csvReader,mainFolderName,mainFolder),2,3,TimeUnit.MINUTES);
+        mainSheduler.scheduleWithFixedDelay(FTPThreadTasks.uploadTmpAndErrorTask(activity,context,dateTimeManager,dataQueueManager,rfidHandler,csvReader,mainFolderName,mainFolder),1,3,TimeUnit.MINUTES);
 }
     private void showDialog(String folderName, String fileName) {
 
@@ -166,6 +180,9 @@ public void startMainTasks(Activity activity, Context context, DateTimeManager d
         // Останавливаем планировщик задач
         if (scheduler != null && !scheduler.isShutdown()) {
             scheduler.shutdown();
+        }
+        if (mainSheduler != null && !mainSheduler.isShutdown()) {
+            mainSheduler.shutdown();
         }
     }
 

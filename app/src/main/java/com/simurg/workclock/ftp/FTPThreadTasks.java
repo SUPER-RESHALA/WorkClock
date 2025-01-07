@@ -377,7 +377,7 @@ if (!errorFile.exists()|| errorFile.length()==0){
                 activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(context,"НАЧАТА СИНХРОНИЗАЦИЯ С СЕРВЕРОМ, НЕ ОТКЛЮЧАЙТЕ ПРИЛОЖЕНИЕ", Toast.LENGTH_LONG);
+                        Toast.makeText(context,"НАЧАТА СИНХРОНИЗАЦИЯ С СЕРВЕРОМ, НЕ ОТКЛЮЧАЙТЕ ПРИЛОЖЕНИЕ", Toast.LENGTH_LONG).show();
                     }
                 });
                 dataQueueManager.startSync();
@@ -389,7 +389,7 @@ if (!errorFile.exists()|| errorFile.length()==0){
                 activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(context,"СИНХРОНИЗАЦИЯ ЗАВЕРШЕНА, ПОВТОР ЧЕРЕЗ 3 МИНУТЫ ", Toast.LENGTH_LONG);
+                        Toast.makeText(context,"СИНХРОНИЗАЦИЯ ЗАВЕРШЕНА, ПОВТОР ЧЕРЕЗ 3 МИНУТЫ ", Toast.LENGTH_LONG).show();
                     }
                 });
                 dataQueueManager.finishSyncAndProcessQueue(rfidHandler,activity,dateTimeManager,mainFolderName,mainFolder,csvReader);
