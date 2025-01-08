@@ -26,7 +26,7 @@
         android:gravity="center"
         android:text="00:00:00"
         android:textColor="#FFFFFF"
-        android:textSize="70sp" />
+        android:textSize="100sp" />
 
     <TextView
         android:id="@+id/dateMain"
@@ -34,12 +34,12 @@
         android:layout_height="117dp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginEnd="280dp"
+        android:layout_marginEnd="255dp"
         android:layout_marginBottom="285dp"
         android:gravity="center"
         android:text="01.01.2024"
         android:textColor="#FFFFFF"
-        android:textSize="70sp" />
+        android:textSize="100sp" />
 
     <TextView
         android:id="@+id/instructor"
@@ -48,11 +48,11 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_marginEnd="135dp"
-        android:layout_marginBottom="135dp"
-        android:textSize="30sp"
+        android:layout_marginBottom="178dp"
         android:gravity="center"
+        android:text="@string/instr"
         android:textColor="#FFFFFF"
-        android:text="@string/instr" />
+        android:textSize="30sp" />
 
     <TextView
         android:id="@+id/recordedDate"
@@ -62,6 +62,7 @@
         android:layout_alignParentBottom="true"
         android:layout_marginEnd="362dp"
         android:layout_marginBottom="379dp"
+        android:gravity="center"
         android:textColor="#008000"
         android:textSize="50sp"
         android:visibility="gone" />
@@ -74,6 +75,7 @@
         android:layout_alignParentBottom="true"
         android:layout_marginEnd="384dp"
         android:layout_marginBottom="472dp"
+        android:gravity="center"
         android:textColor="#008000"
         android:textSize="50sp"
         android:visibility="gone" />
@@ -98,8 +100,9 @@
         android:layout_height="213dp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginEnd="173dp"
-        android:layout_marginBottom="70dp"
+        android:layout_marginEnd="171dp"
+        android:layout_marginBottom="156dp"
+        android:gravity="center"
         android:text="@string/timeUnReg"
         android:textColor="#FF0000"
         android:textSize="50sp"

@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
     private ScheduledExecutorService mainSheduler;
     DataQueueManager dataQueueManager;
     RFIDHandler rfidHandler;
-CsvReader csvReader;
+    CsvReader csvReader;
     private FTPFileManager ftpFileManager;
     File mainFolder;
 

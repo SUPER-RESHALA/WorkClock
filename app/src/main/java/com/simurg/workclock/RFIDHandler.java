@@ -12,6 +12,7 @@ import com.simurg.workclock.entity.Employee;
 import com.simurg.workclock.file.CsvReader;
 import com.simurg.workclock.file.DataQueueManager;
 import com.simurg.workclock.file.FileManagerDesktop;
+import com.simurg.workclock.ui.UiManager;
 
 import java.io.File;
 import java.util.Map;
@@ -146,9 +147,21 @@ public class RFIDHandler {
     ) {
         if (employee == null) {
             appendToErrorFile(errorFile, data, activity, dateTimeManager, mainFolderName);
+            UiManager.hideElementForShortTime(activity,R.id.dateMain);
+            UiManager.hideElementForShortTime(activity,R.id.timeMain);
+            UiManager.hideElementForShortTime(activity,R.id.instructor);
+            UiManager.showElementForShortTime(activity,R.id.textUnreg);
             Toast.makeText(activity, "Время зафиксировано в ERROR TXT", Toast.LENGTH_SHORT).show();
         } else {
             FileManagerDesktop.createTemplateFile(activity, employee, mainFolderName, dateTimeManager, mainFolder);
+            UiManager.hideElementForShortTime(activity,R.id.dateMain);
+            UiManager.hideElementForShortTime(activity,R.id.timeMain);
+            UiManager.hideElementForShortTime(activity,R.id.instructor);
+            UiManager.setRecordedTime(activity,dateTimeManager);
+            UiManager.setRecordedDate(activity,dateTimeManager);
+            UiManager.showElementForShortTime(activity,R.id.recordedTime);
+            UiManager.showElementForShortTime(activity,R.id.recordedDate);
+            UiManager.showElementForShortTime(activity,R.id.textReg);
             Toast.makeText(activity, "Время зафиксировано: " + employee.getCode(), Toast.LENGTH_SHORT).show();
         }
     }
