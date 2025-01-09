@@ -110,8 +110,11 @@ public class MainActivity extends AppCompatActivity {
         startUpdatingTime();
       scheduler = Executors.newSingleThreadScheduledExecutor();
      // mainSheduler = Executors.newScheduledThreadPool(2);
-     startUploadingFileEveryMinute(this, "WorkClockFiles", dateTimeManager, scheduler);
-  //   Map<String, Employee> map =csvReader.readCsvToMap(filePath);
+
+        startUploadingFileEveryMinute(this, "WorkClockFiles", dateTimeManager, scheduler);
+
+
+        //   Map<String, Employee> map =csvReader.readCsvToMap(filePath);
     // FileManagerDesktop.createTemplateFile(this,map.get("0009771047"),mainFolderName,dateTimeManager,mainFolder);
       //FileManagerDesktop.createTemplateFile(this,map.get("0003830814"),mainFolderName,dateTimeManager,mainFolder);
 
@@ -128,11 +131,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     public void startMainTasks(Activity activity, Context context, DateTimeManager dateTimeManager, DataQueueManager dataQueueManager, RFIDHandler rfidHandler, CsvReader csvReader, String mainFolderName, File mainFolder){
-        mainSheduler.scheduleWithFixedDelay(FTPThreadTasks.cardTask(context,csvReader),0,2,TimeUnit.MINUTES);
+        mainSheduler.scheduleWithFixedDelay(FTPThreadTasks.cardTask(activity,context,csvReader),0,2,TimeUnit.MINUTES);
         mainSheduler.scheduleWithFixedDelay(FTPThreadTasks.uploadTmpAndErrorTask(activity,context,dateTimeManager,dataQueueManager,rfidHandler,csvReader,mainFolderName,mainFolder),1,3,TimeUnit.MINUTES);
-}
+//        mainSheduler.scheduleWithFixedDelay(new Runnable() {
+//            @Override
+//            public void run() {
+//                FTPThreadTasks.testFunction(context, mainSheduler);
+//            }
+//        }, 0, 4000, TimeUnit.MILLISECONDS);
+       // mainSheduler.scheduleWithFixedDelay(FTPThreadTasks.testFunction2(context),0,60000,TimeUnit.MILLISECONDS);
+    }
     private void showDialog(String folderName, String fileName) {
 
         File folder = new File(getExternalFilesDir(null), folderName);

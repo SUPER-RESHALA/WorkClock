@@ -27,10 +27,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ScheduledExecutorService;
 
 public class FTPThreadTasks {
     public static synchronized void checkCardFileModify(Context context, CsvReader csvReader) {
-     new Thread(()->{
+
 String TAG="checkCardFileModify";
      int replyCode;
          String remoteFileName = "cards.csv";
@@ -113,9 +114,6 @@ String TAG="checkCardFileModify";
         if (csvReader.checkIsUpdating()){csvReader.finishUpdate();}
 
     }
-}).start();
-
-
  }
 
     public static synchronized void sendFileToFtp(Context context, String localFolderName, DateTimeManager dateTimeManager) throws InterruptedException {
@@ -305,7 +303,6 @@ if (!errorFile.exists()|| errorFile.length()==0){
             Log.i("uploadAllTmp", "Нет временных файлов");
             return;
         }
-
         boolean allFilesUploaded = true;
 
         try {
@@ -351,14 +348,14 @@ if (!errorFile.exists()|| errorFile.length()==0){
                 }
             }
 
+        } catch (IOException e) {
+            allFilesUploaded = false;
+            throw new RuntimeException(e);
+        }finally {
             if (ftpConnectionManager.isConnected()) {
                 ftpConnectionManager.logout();
                 ftpConnectionManager.disconnect();
             }
-
-        } catch (IOException e) {
-            allFilesUploaded = false;
-            throw new RuntimeException(e);
         }
 
         if (allFilesUploaded) {
@@ -366,35 +363,91 @@ if (!errorFile.exists()|| errorFile.length()==0){
         }
     }
 
-    public static Runnable cardTask(Context context, CsvReader csvReader) {
+    public static Runnable cardTask(Activity activity, Context context, CsvReader csvReader) {
         return () -> {
-            checkCardFileModify(context,csvReader);
+            if (NetworkUtils.isNetworkConnected(context)){
+              //  new Thread(() -> {
+                    checkCardFileModify(context,csvReader);
+              //  }).start();
+
+            }else {
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context, "Проверка файла карточек невозможна так как интернет отсутствует, повтор через 2 минуты",Toast.LENGTH_LONG).show();
+
+                    }
+                });
+                Log.e("CardTask","НЕТ ИНТЕРНЕТА");
+              //  throw new RuntimeException("Нет интернета");
+                }
+
         };
     }
     public static Runnable uploadTmpAndErrorTask(Activity activity, Context context, DateTimeManager dateTimeManager, DataQueueManager dataQueueManager, RFIDHandler rfidHandler, CsvReader csvReader, String mainFolderName, File mainFolder ) {
         return () -> {
-            try {
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(context,"НАЧАТА СИНХРОНИЗАЦИЯ С СЕРВЕРОМ, НЕ ОТКЛЮЧАЙТЕ ПРИЛОЖЕНИЕ", Toast.LENGTH_LONG).show();
+            if (NetworkUtils.isNetworkConnected(context)){
+            //    new Thread(()->{
+                    try {
+                        activity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(context,"НАЧАТА СИНХРОНИЗАЦИЯ С СЕРВЕРОМ, НЕ ОТКЛЮЧАЙТЕ ПРИЛОЖЕНИЕ", Toast.LENGTH_LONG).show();
+                            }
+                        });
+                        dataQueueManager.startSync();
+                        uploadAllTmpWithValidation(context,dateTimeManager);
+                        uploadErrorFile(context,dateTimeManager);
+                    } catch (RuntimeException e) {
+                        throw new RuntimeException(e);
+                    }finally {
+                        activity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(context,"СИНХРОНИЗАЦИЯ ЗАВЕРШЕНА, ПОВТОР ЧЕРЕЗ 3 МИНУТЫ ", Toast.LENGTH_LONG).show();
+                            }
+                        });
+                        dataQueueManager.finishSyncAndProcessQueue(rfidHandler,activity,dateTimeManager,mainFolderName,mainFolder,csvReader);
                     }
-                });
-                dataQueueManager.startSync();
-                uploadAllTmpWithValidation(context,dateTimeManager);
-                uploadErrorFile(context,dateTimeManager);
-            } catch (RuntimeException e) {
-                throw new RuntimeException(e);
-            }finally {
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(context,"СИНХРОНИЗАЦИЯ ЗАВЕРШЕНА, ПОВТОР ЧЕРЕЗ 3 МИНУТЫ ", Toast.LENGTH_LONG).show();
-                    }
-                });
-                dataQueueManager.finishSyncAndProcessQueue(rfidHandler,activity,dateTimeManager,mainFolderName,mainFolder,csvReader);
+              //  }).start();
+
+            }else {
+                Log.e("UploadErrAndTMPTasks","Нет Интернета");
+               activity.runOnUiThread(new Runnable() {
+                   @Override
+                   public void run() {
+                       Toast.makeText(context,"Синхронизация невозможна так как интернет отсутствует, повтор через 3 минуты",Toast.LENGTH_LONG).show();
+
+                   }
+               });
+               // throw new RuntimeException("Нет интернета");
             }
             };
+
     }
+
+
+    public static void testFunction(Context context, ScheduledExecutorService mainSheduller){
+        if (mainSheduller.isShutdown()|| mainSheduller.isTerminated()){
+            Log.e("()()()()()()()()()()()()()()", "()()()()()()()()(()()()()()()Планировщик мертв");
+        }
+        if (!NetworkUtils.isNetworkConnected(context)){
+            Log.e(" IF Test1","---------------------------------------- Интернета нет");
+        }else {
+            Log.w("ELSE Test1", "+++++++++++++++++++++++++++++++++ ПРОДОЛЖАЕМ РАБОТУ");
+        }
+    }
+
+
+    public static Runnable testFunction2(Context context){
+return ()->{
+    if (!NetworkUtils.isNetworkConnected(context)){
+        Log.e(" IF Test2","---------------------------------------- Интернета нет");
+    }else {
+        Log.w("ELSE Test2", "+++++++++++++++++++++++++++++++++ ПРОДОЛЖАЕМ РАБОТУ");
+    }
+};
+}
+
 
 }//end of Class
