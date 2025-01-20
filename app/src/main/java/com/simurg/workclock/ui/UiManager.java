@@ -108,6 +108,10 @@ public class UiManager {
         TextView recordedDate = activity.findViewById(R.id.recordedDate);
         recordedDate.setText(dateTimeManager.getFormattedDate());
     }
+    public static void setCodeText(Activity activity, String text){
+        TextView code = activity.findViewById(R.id.code);
+        code.setText(text);
+    }
     public static void showElementForShortTime(Activity activity, int elementId) {
         // Находим элемент по ID
         View element = activity.findViewById(elementId);

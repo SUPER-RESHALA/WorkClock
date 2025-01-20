@@ -350,6 +350,7 @@ if (!errorFile.exists()|| errorFile.length()==0){
 
         } catch (IOException e) {
             allFilesUploaded = false;
+            FileManagerDesktop.renameAllTmpWithReplace(new File(baseDir,mainFolderName),dateTimeManager);
             throw new RuntimeException(e);
         }finally {
             if (ftpConnectionManager.isConnected()) {

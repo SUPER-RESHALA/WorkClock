@@ -1,6 +1,7 @@
 package com.simurg.workclock;
 
 import android.app.Activity;
+import android.content.Context;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
@@ -15,12 +16,16 @@ import com.simurg.workclock.file.FileManagerDesktop;
 import com.simurg.workclock.ui.UiManager;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 
 public class RFIDHandler {
     private long initCsvFileSize =-1;
     private File csvFile;
     Map<String, Employee> map;
+    private HashMap<String, Long> tokenScanTimes = new HashMap<>();
+    // Константа для времени в миллисекундах (60 секунд)
+    private static final long COOLDOWN_TIME = 60 * 1000;
     public void RFIDInputHandler(EditText rfidNumber, Activity activity, DateTimeManager dateTimeManager, String mainFolderName, File mainFolder, CsvReader csvReader, DataQueueManager dataQueueManager){
         rfidNumber.setOnEditorActionListener((v, actionId, event) -> {
             // Проверяем, что нажата клавиша Enter или действие "Done"
@@ -31,9 +36,10 @@ public class RFIDHandler {
 
                 // Проверяем длину текста
                 if (enteredText.length() == 10) {
-                    addData(enteredText,activity,dateTimeManager,mainFolderName,mainFolder,csvReader,dataQueueManager);
-                    //processScannedData(enteredText, activity,  dateTimeManager, mainFolderName, mainFolder, csvReader); // Если длина 10, обрабатываем данные
-                } else {
+                    if (checkToken(enteredText,activity)){
+                        addData(enteredText,activity,dateTimeManager,mainFolderName,mainFolder,csvReader,dataQueueManager);
+                    }
+                     } else {
                     Log.e("RFID_ERROR", "Некорректный ввод: " + enteredText); // Логируем ошибку
                 }
 
@@ -251,6 +257,24 @@ public class RFIDHandler {
 
     }
 
+    public boolean checkToken(String tokenId, Activity activity) {
+        long currentTime = System.currentTimeMillis();
+        if (tokenScanTimes.containsKey(tokenId)) {
+            long lastScanTime = tokenScanTimes.get(tokenId);
+            if (currentTime - lastScanTime < COOLDOWN_TIME) {
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        UiManager.showElementForShortTime(activity, R.id.code);
+                       // Toast.makeText(context, "Этот жетон уже был отсканирован. Пожалуйста, подождите минуту.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                return false;  // Запрещаем сканирование
+            }
+        }
+        tokenScanTimes.put(tokenId, currentTime);
+        return true;  // Разрешаем сканирование
+    }
 
 
 

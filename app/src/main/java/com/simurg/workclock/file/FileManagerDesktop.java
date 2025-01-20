@@ -439,6 +439,103 @@ if (allTmpFiles.isEmpty()){
         return allRenamedSuccessfully; // Возвращаем true только если все файлы успешно переименованы
     }
 
+
+
+
+
+
+    /**
+     * Переименовывает файл с возможностью замены, если файл с новым именем уже существует.
+     *
+     * @param originalFilePath Путь к исходному файлу.
+     * @param newFileName      Новое имя файла.
+     * @return true, если операция прошла успешно, false в случае неудачи.
+     */
+    public static boolean renameFileWithReplace(String originalFilePath, String newFileName) {
+        File originalFile = new File(originalFilePath);
+
+        // Проверяем, существует ли исходный файл
+        if (!originalFile.exists()) {
+            System.err.println("Исходный файл не найден: " + originalFilePath);
+            return false;
+        }
+
+        // Получаем родительскую директорию исходного файла
+        File parentDir = originalFile.getParentFile();
+
+        // Создаём объект File для нового имени в той же директории
+        File newFile = new File(parentDir, newFileName);
+
+        // Если файл с новым именем уже существует, удаляем его
+        if (newFile.exists()) {
+            if (!newFile.delete()) {
+                System.err.println("Не удалось удалить существующий файл: " + newFile.getAbsolutePath());
+                return false;
+            }
+        }
+
+        // Переименовываем файл
+        boolean success = originalFile.renameTo(newFile);
+        if (success) {
+            System.out.println("Файл успешно переименован: " + newFile.getAbsolutePath());
+        } else {
+            System.err.println("Не удалось переименовать файл: " + originalFilePath);
+        }
+
+        return success;
+    }
+
+
+    public static boolean renameAllTmpWithReplace(File mainFolder, DateTimeManager dateTimeManager) {
+        String currentYear = dateTimeManager.getYear() + "/";
+        String currentMonthYear = dateTimeManager.getFormattedMonthYear() + "/";
+        String path = currentYear + currentMonthYear;
+
+        File mainTmpFolder = new File(mainFolder, path);
+
+        // Проверяем, что директория существует
+        if (!mainTmpFolder.exists() || !mainTmpFolder.isDirectory()) {
+            Log.e("renameAllTmpWithReplace", "Папка " + mainTmpFolder.getAbsolutePath() + " не найдена или не является директорией.");
+            return false;
+        }
+
+        List<File> allTmpFiles = FileCollector.collectOnlyFiles(mainTmpFolder);
+
+        // Если файлов нет
+        if (allTmpFiles.isEmpty()) {
+            Log.i("renameAllTmpWithReplace", "Нет файлов для переименования в " + mainTmpFolder.getAbsolutePath());
+            return false;
+        }
+
+        boolean allRenamedSuccessfully = true;
+
+        for (File file : allTmpFiles) {
+            if (file.getName().endsWith("local.html")) {
+                String newName = file.getName().replace("local.html", ".html");
+                try {
+                    boolean success = FileManagerDesktop.renameFileWithReplace(file.getAbsolutePath(), newName);
+                    if (success) {
+                        Log.i("renameAllTmpWithReplace", "Файл " + file.getAbsolutePath() + " переименован в " + newName);
+                    } else {
+                        Log.e("renameAllTmpWithReplace", "Не удалось переименовать файл: " + file.getAbsolutePath());
+                        allRenamedSuccessfully = false;
+                    }
+                } catch (Exception e) {
+                    Log.e("renameAllTmpWithReplace", "Ошибка при переименовании файла: " + file.getAbsolutePath(), e);
+                    allRenamedSuccessfully = false;
+                }
+            }
+        }
+
+        return allRenamedSuccessfully;
+    }
+
+
+
+
+
+    // public static void renameWith
+
 //       //   File baseDir = context.getExternalFilesDir(null); // Базовая директория приложения
 //         File logFolder= new File(mainFolder, "HTMLFinalContent");
 //         File htmlFileTest= new File(logFolder,"HtmlLogs.txt");

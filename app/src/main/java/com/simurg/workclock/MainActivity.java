@@ -9,12 +9,16 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.text.InputType;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -84,6 +88,12 @@ public class MainActivity extends AppCompatActivity {
         View decorView = getWindow().getDecorView();
         int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
         decorView.setSystemUiVisibility(uiOptions);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(getResources().getColor(R.color.black));
+            window.setNavigationBarColor(Color.BLACK);
+        }
         // Инициализация ActivityResultLauncher
         showDialog("WorkClockFiles", "id.txt");
         String filePath = this.getExternalFilesDir(null) + "/WorkClockFiles/cards.csv";
@@ -103,7 +113,8 @@ public class MainActivity extends AppCompatActivity {
         timeMain.setText(dateTimeManager.getFormattedTime());
         dateMain.setText(dateTimeManager.getFormattedDate());
          rfidHandler = new RFIDHandler();
-         FileManagerDesktop.deleteAllTmp(this,dateTimeManager);
+         FileManagerDesktop.renameAllTmpWithReplace(mainFolder,dateTimeManager);
+        // FileManagerDesktop.deleteAllTmp(this,dateTimeManager);
         rfidHandler.RFIDInputHandler(rfidNumber, this, dateTimeManager,mainFolderName, mainFolder, csvReader,dataQueueManager);
         handler = new Handler();
         // Запускаем обновление времени каждую секунду
@@ -112,6 +123,13 @@ public class MainActivity extends AppCompatActivity {
      // mainSheduler = Executors.newScheduledThreadPool(2);
 
         startUploadingFileEveryMinute(this, "WorkClockFiles", dateTimeManager, scheduler);
+
+
+//FileManagerDesktop.renameAllTmpWithReplace(mainFolder,dateTimeManager);
+//    File testFolder=   FileManagerDesktop.createCustomFolder(mainFolder,"testingFolder");
+//    File testFile1=   FileManagerDesktop.createFileInCustomFolder(testFolder,"2.txt","abc");
+//    File testFile2= FileManagerDesktop.createFileInCustomFolder(testFolder,"2local.txt","def");
+//    FileManagerDesktop.renameFileWithReplace(testFile2.getAbsolutePath(),"2.txt");
 
 
         //   Map<String, Employee> map =csvReader.readCsvToMap(filePath);
