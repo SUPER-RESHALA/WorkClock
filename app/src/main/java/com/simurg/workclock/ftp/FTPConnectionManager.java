@@ -2,6 +2,8 @@ package com.simurg.workclock.ftp;
 
 import android.util.Log;
 
+import com.simurg.workclock.log.FileLogger;
+
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 
@@ -23,23 +25,22 @@ public class FTPConnectionManager {
 
     public boolean connect(String host) {
         try {
-            logInfo("Подключение к серверу: " + host + ":21");
+            FileLogger.log("connectFtp", "Connect to Ftp "+ host);
             ftpClient.connect(host);
             ftpClient.enterLocalPassiveMode();
             ftpClient.setParserFactory(new DefaultFTPFileEntryParserFactory());
 
             int replyCode = ftpClient.getReplyCode();
             if (!FTPReply.isPositiveCompletion(replyCode)) {
-                logError("Ошибка подключения. Код ответа: " + replyCode);
+                FileLogger.logError("connect FtpContManager", "Error connect. Reply code: "+ replyCode);
                 disconnect();
                 return false;
             }
-
             logInfo("Подключение успешно.");
             return true;
 
         } catch (IOException e) {
-            logError("Ошибка подключения: " + e.getMessage());
+            FileLogger.logError("Ftp Connect", "Connection failed "+ e.getMessage()+ "  "+ Log.getStackTraceString(e));
             return false;
         }
     }
@@ -56,21 +57,20 @@ public class FTPConnectionManager {
 
     public boolean login(String username, String password) {
         try {
-            logInfo("Авторизация пользователя: " + username);
+            FileLogger.log("loginFtp", "Login "+username);
             boolean success = ftpClient.login(username, password);
             int replyCode = ftpClient.getReplyCode();
 
             if (!success || !FTPReply.isPositiveCompletion(replyCode)) {
-                logError("Ошибка авторизации. Код ответа: " + replyCode);
+                FileLogger.logError("Login","Login failed. Reply code: "+ replyCode);
                 return false;
             }
-
             logInfo("Авторизация успешна.");
             ftpClient.enterLocalPassiveMode();
             return true;
 
         } catch (IOException e) {
-            logError("Ошибка авторизации: " + e.getMessage());
+            FileLogger.logError("Login", "Login failed "+e.getMessage()+"    "+ Log.getStackTraceString(e));
             return false;
         }
     }
@@ -82,7 +82,7 @@ public class FTPConnectionManager {
                 logInfo("Выход из учетной записи выполнен.");
             }
         } catch (IOException e) {
-            logError("Ошибка при выходе из учетной записи: " + e.getMessage());
+            FileLogger.logError("Logout", "Logout failed " +e.getMessage() +"    "+ Log.getStackTraceString(e));
         }
     }
 
@@ -93,7 +93,7 @@ public class FTPConnectionManager {
                 logInfo("Отключение от сервера выполнено.");
             }
         } catch (IOException e) {
-            logError("Ошибка при отключении от сервера: " + e.getMessage());
+            FileLogger.logError("Disconnect",  "Disconnect failed "+ e.getMessage()+"    "+ Log.getStackTraceString(e));
         }
     }
 

@@ -1,6 +1,9 @@
 package com.simurg.workclock.file;
 
+import android.util.Log;
+
 import com.simurg.workclock.entity.Employee;
+import com.simurg.workclock.log.FileLogger;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -61,14 +64,14 @@ public class CsvReader {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            FileLogger.logError("CsvReader error", e.getMessage()+"\n"+ Log.getStackTraceString(e) );
         } finally {
             // Закрываем BufferedReader, если он был открыт
             if (br != null) {
                 try {
                     br.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    FileLogger.logError("CsvReader error", e.getMessage()+"\n"+ Log.getStackTraceString(e) );
                 }
             }
         }

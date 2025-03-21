@@ -8,6 +8,7 @@ import android.os.Environment;
 import android.util.Log;
 
 import com.simurg.workclock.file.FileManagerDesktop;
+import com.simurg.workclock.log.FileLogger;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -46,6 +47,7 @@ public class HtmlEditor {
                 htmlContent.append(line).append("\n");
             }
         } catch (IOException e) {
+            FileLogger.logError("loadTemplate", e.getMessage()+ "    "+ Log.getStackTraceString(e));
             e.printStackTrace();
         }
         return htmlContent.toString();
@@ -65,6 +67,7 @@ public class HtmlEditor {
         );
 int indexOfTableTag=finalContent.indexOf("</table>");
         if (indexOfTableTag == -1) {
+            FileLogger.logError("addNewRowToHtml", "HTML content does not contain </table> tag "+ finalContent+"    CODE:"+code);
             throw new IllegalArgumentException("HTML content does not contain </table> tag");
         }
 StringBuilder stringBuilder=new StringBuilder(finalContent);
@@ -89,6 +92,7 @@ stringBuilder.insert(indexOfTableTag,newRow);
         // Поиск таблицы с данными
         Elements tables = document.select("table#center table");
         if (tables.isEmpty()) {
+            FileLogger.logError("extractDataRowsFromFileOldVersion", "Table not found "+htmlFile.getName());
             throw new IOException("Таблица не найдена в файле: " + htmlFile.getName());
         }
         Element table = tables.get(0); // Берем первый найденный элемент

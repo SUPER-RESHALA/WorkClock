@@ -8,6 +8,7 @@ import android.util.Log;
 import com.simurg.workclock.FileCollector;
 import com.simurg.workclock.data.DateTimeManager;
 import com.simurg.workclock.entity.Employee;
+import com.simurg.workclock.log.FileLogger;
 import com.simurg.workclock.template.HtmlEditor;
 
 import java.io.BufferedReader;
@@ -26,7 +27,7 @@ public class FileManagerDesktop {
     public static File createCustomFolder(Context context, String customFolderName) {
         File baseDir = context.getExternalFilesDir(null); // Базовая директория приложения
         if (baseDir == null) {
-            Log.e("FileManager", "Не удалось получить доступ к внешнему хранилищу.");
+            FileLogger.logError("createCustomFolder", "Cant access to external storage");
             return null;
         }
 
@@ -35,19 +36,19 @@ public class FileManagerDesktop {
         if (!customFolder.exists()) {
             boolean created = customFolder.mkdirs(); // Создание папки
             if (created) {
-                Log.i("FileManager", "Папка успешно создана: " + customFolder.getAbsolutePath());
+                FileLogger.log("createCustomFolder", "mkDir success "+ customFolder.getAbsolutePath());
             } else {
-                Log.e("FileManager", "Не удалось создать папку: " + customFolder.getAbsolutePath());
+                FileLogger.logError("createCustomFolder", "cant mkdir "+ customFolder.getAbsolutePath());
             }
         } else {
-            Log.i("FileManager", "Папка уже существует: " + customFolder.getAbsolutePath());
+            FileLogger.log("createCustomFolder", "dir already exists "+ customFolder.getAbsolutePath());
         }
 
         return customFolder;
     }
     public static File createCustomFolder(File parentFolder, String customFolderName) {
         if (parentFolder == null || !parentFolder.exists()) {
-            Log.e("FileManager", "Базовая папка не существует или не задана.");
+            FileLogger.logError("createCustomFolder(without context)", "base folder is already exist or not specified");
             return null;
         }
 
@@ -56,12 +57,12 @@ public class FileManagerDesktop {
         if (!customFolder.exists()) {
             boolean created = customFolder.mkdirs(); // Создание папки
             if (created) {
-                Log.i("FileManager", "Папка успешно создана: " + customFolder.getAbsolutePath());
+                FileLogger.log("createCustomFolder(without context)", "mkdir success "+ customFolder.getAbsolutePath());
             } else {
-                Log.e("FileManager", "Не удалось создать папку: " + customFolder.getAbsolutePath());
+                FileLogger.logError("createCustomFolder(without context)", "cant mkdir "+ customFolder.getAbsolutePath());
             }
         } else {
-            Log.i("FileManager", "Папка уже существует: " + customFolder.getAbsolutePath());
+            FileLogger.log("createCustomFolder(without context)", "Dir already exists "+ customFolder.getAbsolutePath());
         }
 
         return customFolder;
@@ -96,7 +97,7 @@ public class FileManagerDesktop {
 
         // Проверяем существование папки, при необходимости создаем
         if (!folder.exists() && !folder.mkdirs()) {
-            Log.e("FileManager", "Не удалось создать папку: " + folder.getAbsolutePath());
+            FileLogger.logError("createFile", "cant mkdir "+ folder.getAbsolutePath());
             return null; // Возвращаем null, так как файл создать невозможно
         }
 
@@ -104,10 +105,10 @@ public class FileManagerDesktop {
         try (FileOutputStream fos = new FileOutputStream(file)) {
             fos.write(fileContent.getBytes());
             fos.flush();
-            Log.i("FileManager", "Файл успешно создан: " + file.getAbsolutePath());
+            FileLogger.log("createFile", "file make success "+file.getAbsolutePath() );
             return file;
         } catch (IOException e) {
-            Log.e("FileManager", "Ошибка при создании файла: " + e.getMessage(), e);
+            FileLogger.logError("createFile", "Error createFile "+ e.getMessage()+ "   "+Log.getStackTraceString(e));
             return null; // Возвращаем null в случае ошибки
         }
     }
@@ -115,7 +116,7 @@ public class FileManagerDesktop {
     public static File createFileInCustomFolder(File parentFolder, String fileName, String fileContent) {
         // Проверяем, существует ли родительская папка, если нет - создаем
         if (parentFolder != null && !parentFolder.exists() && !parentFolder.mkdirs()) {
-            Log.e("FileManager", "Не удалось создать папку: " + parentFolder.getAbsolutePath());
+            FileLogger.logError("createFileInCustomFolder", "cant mkdir "+parentFolder.getAbsolutePath() );
             return null; // Если папка не может быть создана, возвращаем null
         }
 
@@ -124,10 +125,10 @@ public class FileManagerDesktop {
         try (FileOutputStream fos = new FileOutputStream(file)) {
             fos.write(fileContent.getBytes());
             fos.flush();
-            Log.i("FileManager", "Файл успешно создан: " + file.getAbsolutePath());
+            FileLogger.log("CreatefileInCustomFolder", "file make success "+file.getAbsolutePath());
             return file;
         } catch (IOException e) {
-            Log.e("FileManager", "Ошибка при создании файла: " + e.getMessage(), e);
+            FileLogger.logError("CreateFileInCustomFolder", "error creating file "+ e.getMessage()+ "   "+Log.getStackTraceString(e));
             return null; // Возвращаем null в случае ошибки
         }
     }
@@ -142,7 +143,7 @@ public class FileManagerDesktop {
                 fileContent.append(line).append("\n");
             }
         } catch (IOException e) {
-            Log.e("FileManager", "Ошибка при чтении файла: " + e.getMessage(), e);
+            FileLogger.logError("readFileContenFromFile", "Error reading file"+ e.getMessage()+ "   "+Log.getStackTraceString(e));
             return null; // Возвращаем null в случае ошибки
         }
 
@@ -180,7 +181,7 @@ public class FileManagerDesktop {
         File file = new File(folder, fileName);
 
         if (!file.exists()) {
-            Log.e("FileReader", "Файл не найден: " + file.getAbsolutePath());
+            FileLogger.logError("readFileContent", "File not found "+file.getAbsolutePath());
             return null;
         }
 
@@ -192,7 +193,7 @@ public class FileManagerDesktop {
                 content.append(line).append("\n");
             }
         } catch (IOException e) {
-            Log.e("FileReader", "Ошибка при чтении файла: " + e.getMessage(), e);
+            FileLogger.logError("readFileContent", "Error reading file "+  e.getMessage()+ "   "+Log.getStackTraceString(e));
             return null;
         }
 
@@ -235,25 +236,26 @@ public class FileManagerDesktop {
                 if (parentFolder != null && !parentFolder.exists()) {
                     boolean dirsCreated = parentFolder.mkdirs(); // Создаем все недостающие папки
                     if (!dirsCreated) {
-                        Log.e("FileManager", "Не удалось создать папки: " + parentFolder.getAbsolutePath());
+                        FileLogger.logError("writeToFile", "cant mkdir "+parentFolder.getAbsolutePath());
                     }
                 }
 
                 // Создаем новый файл, если он не существует
                 if (!outputFile.exists()) {
-                    outputFile.createNewFile();
+                    boolean isCreate= outputFile.createNewFile();
+                    FileLogger.log("writeToFile", "createNewfile  "+isCreate);
                 }
 
                 // Записываем содержимое в файл
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true))) {
                     writer.write(finalContent);
                     writer.flush();  // Очищаем буфер
-                    Log.i("FileManager", "Содержимое успешно записано в файл: " + outputFile.getAbsolutePath());
+                    FileLogger.log("wrietToFile","content write successfully " + outputFile.getAbsolutePath());
                     return outputFile;  // Возвращаем объект File
                 }
             }
         } catch (IOException e) {
-            Log.e("FileManager", "Ошибка при записи в файл: " + e.getMessage(), e);
+            FileLogger.logError("writeToFile", "Error writing in file "+  e.getMessage()+ "   "+Log.getStackTraceString(e));
         }
         return null;  // Возвращаем null в случае ошибки
     }
@@ -262,6 +264,7 @@ public class FileManagerDesktop {
 
     public static String[] splitString(String input, String delimiter) {
         if (input == null || delimiter == null) {
+            FileLogger.logError("splitString ", "Exception IllegalArg");
             throw new IllegalArgumentException("Input string and delimiter cannot be null");
         }
         return input.split("\\Q" + delimiter + "\\E"); // \Q и \E экранируют разделитель
@@ -270,6 +273,7 @@ public class FileManagerDesktop {
 
 
     public static File createTemplateFileForQueue(Context context, Employee employee, String mainFolderName, DateTimeManager dateTimeManager, File mainFolder, String dateAndTime){
+        FileLogger.log("createTemplateFileForQueue", "method call");
         String[] workerInfo = splitString(dateAndTime, "|");
         String currentYear=dateTimeManager.getYear();//+++++
         String currentDate=workerInfo[2];
@@ -291,6 +295,9 @@ public class FileManagerDesktop {
         }else {
             String htmlFileContent= readFileContenFromFile(htmlFile);
             //System.out.println(htmlFileContent);
+            if (htmlFileContent==null|| htmlFileContent.isEmpty()){
+                FileLogger.logError("createTempFileforQueue", "htmlFileContent is null "+ htmlFileContent);
+            }
             String finalContent= htmlEditor.addNewRowToHtml(htmlFileContent,code,currentDate,currentTime,note);
             htmlFile = createFileInCustomFolder(subdivisionFolder,htmlFile.getName(),finalContent);
         }
@@ -318,6 +325,9 @@ public class FileManagerDesktop {
          htmlFile = createFileInCustomFolder(subdivisionFolder,htmlFile.getName(),finalContent);
       }else {
          String htmlFileContent= readFileContenFromFile(htmlFile);
+          if (htmlFileContent==null|| htmlFileContent.isEmpty()){
+              FileLogger.logError("createTempFile", "htmlFileContent is null "+ htmlFileContent);
+          }
          String finalContent= htmlEditor.addNewRowToHtml(htmlFileContent,code,currentDate,currentTime,note);
           htmlFile = createFileInCustomFolder(subdivisionFolder,htmlFile.getName(),finalContent);
       }
@@ -336,7 +346,7 @@ public class FileManagerDesktop {
 
         // Проверяем, существует ли исходный файл
         if (!originalFile.exists()) {
-            Log.e("renameFile","Файл не найден: " + originalFilePath);
+            FileLogger.logError("ranameFile", "File not found " +originalFilePath);
             return false;
         }
 
@@ -345,16 +355,16 @@ public class FileManagerDesktop {
 
         // Проверяем, не существует ли уже файл с новым именем
         if (newFile.exists()) {
-           Log.e("renameFile","Файл с именем " + newFile.getAbsolutePath() + " уже существует.");
+            FileLogger.logError("renameFile", "File already exists "+newFile.getAbsolutePath());
             return false;
         }
 
         // Переименовываем файл
         boolean success = originalFile.renameTo(newFile);
         if (success) {
-            System.out.println("Файл успешно переименован: " + newFile.getAbsolutePath());
+            FileLogger.log("RenameFile"," success renameFile " + newFile.getAbsolutePath() );
         } else {
-            Log.e("renameFile","Не удалось переименовать файл: " + originalFilePath);
+            FileLogger.logError("renameFile", "cant renameFile"+originalFilePath);
         }
 
         return success;
@@ -367,6 +377,7 @@ public class FileManagerDesktop {
         return false; // Если это не файл, возвращаем false
     }
     public static void deleteAllTmp(Context context, DateTimeManager dateTimeManager){
+        FileLogger.log("deleteAllTmp", "method call");
         String mainFolderName ="WorkClockFiles";
         String currentYear= dateTimeManager.getYear();
         String currentMonthYear= dateTimeManager.getFormattedMonthYear();
@@ -384,6 +395,7 @@ public class FileManagerDesktop {
 
 
     public static  boolean delFinalFiles(File mainFolder, DateTimeManager dateTimeManager){
+        FileLogger.log("delFinalFiles", "method call");
         String currentYear= dateTimeManager.getYear()+"/";
         String currentMonthYear= dateTimeManager.getFormattedMonthYear()+"/";
         String path= currentYear+currentMonthYear;
@@ -456,7 +468,7 @@ if (allTmpFiles.isEmpty()){
 
         // Проверяем, существует ли исходный файл
         if (!originalFile.exists()) {
-            System.err.println("Исходный файл не найден: " + originalFilePath);
+            FileLogger.logError("renameFileWithReplace", "File Not found "+ originalFilePath);
             return false;
         }
 
@@ -469,7 +481,7 @@ if (allTmpFiles.isEmpty()){
         // Если файл с новым именем уже существует, удаляем его
         if (newFile.exists()) {
             if (!newFile.delete()) {
-                System.err.println("Не удалось удалить существующий файл: " + newFile.getAbsolutePath());
+                FileLogger.logError("renameFileWithReplace", "Cant delete existing file "+ newFile.getAbsolutePath());
                 return false;
             }
         }
@@ -477,9 +489,9 @@ if (allTmpFiles.isEmpty()){
         // Переименовываем файл
         boolean success = originalFile.renameTo(newFile);
         if (success) {
-            System.out.println("Файл успешно переименован: " + newFile.getAbsolutePath());
+            FileLogger.log("renameFileWithReplace", "renameSuccess "+ newFile.getAbsolutePath());
         } else {
-            System.err.println("Не удалось переименовать файл: " + originalFilePath);
+            FileLogger.logError("renameFileWithReplace", "Cant rename File "+originalFilePath );
         }
 
         return success;
@@ -495,7 +507,7 @@ if (allTmpFiles.isEmpty()){
 
         // Проверяем, что директория существует
         if (!mainTmpFolder.exists() || !mainTmpFolder.isDirectory()) {
-            Log.e("renameAllTmpWithReplace", "Папка " + mainTmpFolder.getAbsolutePath() + " не найдена или не является директорией.");
+            FileLogger.logError("renameAllTmpWithReplace", "Folder "+ mainTmpFolder.getAbsolutePath()+ " not found or not a dir" );
             return false;
         }
 
@@ -503,7 +515,7 @@ if (allTmpFiles.isEmpty()){
 
         // Если файлов нет
         if (allTmpFiles.isEmpty()) {
-            Log.i("renameAllTmpWithReplace", "Нет файлов для переименования в " + mainTmpFolder.getAbsolutePath());
+            FileLogger.log("renameAllTmpWithReplace", "No file for rename in "+mainTmpFolder.getAbsolutePath());
             return false;
         }
 
@@ -515,13 +527,13 @@ if (allTmpFiles.isEmpty()){
                 try {
                     boolean success = FileManagerDesktop.renameFileWithReplace(file.getAbsolutePath(), newName);
                     if (success) {
-                        Log.i("renameAllTmpWithReplace", "Файл " + file.getAbsolutePath() + " переименован в " + newName);
+                        FileLogger.log("renameAllTmpWithReplace","File "+ file.getAbsolutePath()+ " rename to "+newName);
                     } else {
-                        Log.e("renameAllTmpWithReplace", "Не удалось переименовать файл: " + file.getAbsolutePath());
+                        FileLogger.logError("renameAllTmpWithReplace", "cant rename file "+file.getAbsolutePath());
                         allRenamedSuccessfully = false;
                     }
                 } catch (Exception e) {
-                    Log.e("renameAllTmpWithReplace", "Ошибка при переименовании файла: " + file.getAbsolutePath(), e);
+                    FileLogger.logError("renameAllTmpWithReplace", "error rename file "+ e.getMessage()+ "     "+ Log.getStackTraceString(e));
                     allRenamedSuccessfully = false;
                 }
             }

@@ -7,6 +7,7 @@ import android.widget.Toast;
 import com.simurg.workclock.RFIDHandler;
 import com.simurg.workclock.data.DateTimeManager;
 import com.simurg.workclock.entity.Employee;
+import com.simurg.workclock.log.FileLogger;
 
 import java.io.File;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -33,11 +34,13 @@ public class DataQueueManager {
 
     public void finishSyncAndProcessQueue(RFIDHandler rfidHandler, Activity activity, DateTimeManager dateTimeManager,
                                           String mainFolderName, File mainFolder, CsvReader csvReader ) {
+        FileLogger.log("finishSyncAndProcessQu","method start");
         isSyncing.set(false);
         isProcessingQueue.set(true);
 
         // Обрабатываем основную очередь
         while (!mainQueue.isEmpty()) {
+            FileLogger.log("finishSyncAndProcessQu", "while cycle,process queue");
             processDataDirectly(mainQueue.poll(),rfidHandler, activity,dateTimeManager,mainFolderName, mainFolder, csvReader);
         }
         isProcessingQueue.set(false);
@@ -46,7 +49,7 @@ public class DataQueueManager {
     private void processDataDirectly(String data, RFIDHandler rfidHandler, Activity activity, DateTimeManager dateTimeManager,
                                      String mainFolderName, File mainFolder, CsvReader csvReader) {
         // Обработка данных обычным способом
-        System.out.println("Processing data: " + data);
+        FileLogger.log("processDataDirectly","Processing data: " + data );
         rfidHandler.processScannedDataFromQueue(data,activity,dateTimeManager,mainFolderName,mainFolder,csvReader);
         // Здесь вы добавите вашу логику обработки и записи в файлы
     }

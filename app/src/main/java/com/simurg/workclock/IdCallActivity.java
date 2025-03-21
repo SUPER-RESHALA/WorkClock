@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.simurg.workclock.entity.DeviceId;
 import com.simurg.workclock.file.FileManagerDesktop;
+import com.simurg.workclock.log.FileLogger;
 
 import java.util.Map;
 
@@ -35,7 +36,7 @@ public class IdCallActivity extends AppCompatActivity {
                         if (isGranted) {
                             Log.i("Permissions", "Разрешение предоставлено: " + permission);
                         } else {
-                            Log.e("Permissions", "Разрешение отклонено: " + permission);
+                            FileLogger.logError("Permissions", "Permission denied "+ permission);
                             finish();
                         }
                     }

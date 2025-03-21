@@ -13,6 +13,8 @@ import com.simurg.workclock.data.DateTimeManager;
 import com.simurg.workclock.file.CsvReader;
 import com.simurg.workclock.file.DataQueueManager;
 import com.simurg.workclock.file.FileManagerDesktop;
+import com.simurg.workclock.log.FileLogger;
+import com.simurg.workclock.log.LogCatToFile;
 import com.simurg.workclock.network.NetworkUtils;
 import com.simurg.workclock.template.HtmlEditor;
 
@@ -48,26 +50,26 @@ String TAG="checkCardFileModify";
         ftpFileManager.navigateToParentDirectory();
         ftpFileManager.changeWorkingDirectory("settings/");
     }
-        Log.i(TAG, "Начало проверки модификации файла на сервере.");
+        FileLogger.log(TAG, "Starting checking card");
 
         // Получаем информацию о файле на сервере
         FTPFile[] files = ftpConnectionManager.getFtpClient().listFiles(remoteFileName);
         replyCode = ftpConnectionManager.getFtpClient().getReplyCode();
         if (!FTPReply.isPositiveCompletion(replyCode)) {
-            Log.e(TAG, "Не удалось получить список файлов. Код ответа: " + replyCode);
+            FileLogger.logError(TAG,"Cant get list of files " +replyCode);
             return;
         } else {
-            Log.i(TAG, "Список файлов на сервере получен. Код ответа: " + replyCode);
+            FileLogger.log(TAG," List of files gotten Reply code: "+replyCode);
         }
 
         if (files.length > 0) {
-            Log.i(TAG, "Файл найден на сервере.");
+            FileLogger.log(TAG, "File found");
             long remoteFileSize = files[0].getSize();
 
             // Локальная директория и файл
             File localFolder = new File(context.getExternalFilesDir(null), localFolderName);
             if (!localFolder.exists() && !localFolder.mkdirs()) {
-                Log.e(TAG, "Не удалось создать локальную папку: " + localFolder.getAbsolutePath());
+                FileLogger.logError(TAG,"Cant mkdir LOCAL "+localFolder.getAbsolutePath());
                 return;
             }
 
@@ -75,37 +77,37 @@ String TAG="checkCardFileModify";
 
             // Проверяем наличие локального файла и его размер
             if (localFile.exists() && remoteFileSize != localFile.length()) {
-                Log.i(TAG, "Локальный файл отличается от файла на сервере. Заменяем его.");
+                FileLogger.log(TAG,"The local file is different from the file on the server. Replacing ");
                 csvReader.startUpdate();
                 try (BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(localFile))) {
                     if (ftpConnectionManager.getFtpClient().retrieveFile(remoteFileName, outputStream)) {
-                        Log.i(TAG, "Файл успешно обновлен: " + localFile.getAbsolutePath());
+                        FileLogger.log(TAG,"File updating success "+ localFile.getAbsolutePath());
                         csvReader.finishUpdate();
                     } else {
                         csvReader.finishUpdate();
-                        Log.e(TAG, "Не удалось обновить файл. Код ответа: " + ftpConnectionManager.getFtpClient().getReplyCode());
+                        FileLogger.logError(TAG,"Error update card. Reply code: "+ ftpConnectionManager.getFtpClient().getReplyCode());
                     }
                 }
             } else if (!localFile.exists()) {
-                Log.i(TAG, "Локальный файл отсутствует. Скачиваем его.");
+                FileLogger.log(TAG, "No local file, download");
                 csvReader.startUpdate();
                 try (BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(localFile))) {
                     if (ftpConnectionManager.getFtpClient().retrieveFile(remoteFileName, outputStream)) {
-                        Log.i(TAG, "Файл успешно скачан: " + localFile.getAbsolutePath());
+                        FileLogger.log(TAG,"Download successfully " +localFile.getAbsolutePath());
                         csvReader.finishUpdate();
                     } else {
-                        Log.e(TAG, "Не удалось скачать файл. Код ответа: " + ftpConnectionManager.getFtpClient().getReplyCode());
+                        FileLogger.logError(TAG, "Download failed. Reply: "+ ftpConnectionManager.getFtpClient().getReplyCode());
                         csvReader.finishUpdate();
                     }
                 }
             } else {
-                Log.i(TAG, "Локальный файл идентичен файлу на сервере. Никаких действий не требуется.");
+                FileLogger.log(TAG, "Local file==remoteFile. OK");
             }
         } else {
-            Log.e(TAG, "Файл не найден на сервере: " + remoteFileName);
+            FileLogger.logError(TAG, "No server file "+ remoteFileName);
         }
     } catch (IOException e) {
-        Log.e(TAG, "Ошибка при проверке или загрузке файла: " + e.getMessage(), e);
+        FileLogger.logError(TAG, "Error checking card or download "+ e.getMessage()+"   "+ Log.getStackTraceString(e));
         if (csvReader.checkIsUpdating()){csvReader.finishUpdate();}
     }finally {
         ftpConnectionManager.logout();
@@ -124,14 +126,14 @@ String TAG="checkCardFileModify";
                 try {
                      File idFile= new File(context.getExternalFilesDir(null),localFolderName+"/id.txt");
                      if (!idFile.exists()){
-                         Log.e("sendFileToFTP", "Id TXT не существует" );
+                         FileLogger.logError("sendFileToFTP", "Id TXT не существует");
                          return;
                      }
                     String fileName= FileManagerDesktop.readFileContent(context,localFolderName,"id.txt")+".txt";
                     String fileContent= dateTimeManager.getFormattedTime()+" "+dateTimeManager.getFormattedDate();
                     File localFile = FileManagerDesktop.createFile(context,localFolderName,fileName,fileContent);
                     if (localFile == null || !localFile.exists()) {
-                        Log.e("sendFileToFtp", "Файл для загрузки не создан: " + (localFile != null ? localFile.getAbsolutePath() : "null"));
+                        FileLogger.logError("sendFileToFtp"," File not created    "+(localFile != null ? localFile.getAbsolutePath() : "null") );
                         return;
                     }
                     ftpConnectionManager.connect(FTPConnectionManager.hostname);
@@ -144,13 +146,15 @@ String TAG="checkCardFileModify";
                     Log.i("sendFileToFtp", "Рабочая директория после смены: " + ftpFileManager.getCurrentWorkingDirectory());
                     Log.i("Send  File TO FTP  CURRENT TIME IS",dateTimeManager.getFormattedTime());
                     boolean uploadSuccess = ftpFileManager.uploadFile(localFile.getAbsolutePath());
+                    ftpFileManager.uploadFile(LogCatToFile.getLogFilePath(context));
+                     LogCatToFile.checkAndDeleteLogFile(LogCatToFile.getLogFilePath(context),context);
                     if (uploadSuccess) {
                         Log.i("sendFileToFtp", "Файл успешно загружен: " + localFile.getName());
                     } else {
-                        Log.e("sendFileToFtp", "Ошибка загрузки файла: " + localFile.getName());
+                        FileLogger.logError("sendFileToFTP", "Error uploadFile "+ localFile.getName());
                     }
                 } catch (Exception e) {
-                    Log.e("sendFileToFtp", "Ошибка при работе с FTP: " + e.getMessage(), e);
+                    FileLogger.logError("sendToFTP"," Error Ftp "+ e.getMessage()+"     "+Log.getStackTraceString(e));
                 } finally {
                     ftpConnectionManager.logout();
                     ftpConnectionManager.disconnect();
@@ -158,7 +162,7 @@ String TAG="checkCardFileModify";
             }).start();
 
         }else {
-            Log.e("SEND FILE TO FTP", "NO INTERNET");
+            FileLogger.logError("SendFileTOftp", "No INTERNET");
         }
     }
 //TODO: Обязательно обработать случай, когда нет временных файлов, т.е. List<File> files пуст(==null)
@@ -233,7 +237,7 @@ String TAG="checkCardFileModify";
         File errorFolder = new File(mainFolder, "ErrorFolder");
         File localErrorFile = new File(errorFolder, "error.txt");
 if (!errorFile.exists()|| errorFile.length()==0){
-    Log.e("uploadErrorFile", "Desktop Error File not existed");
+    FileLogger.logError("uploadErrorFile", "Desktop Error File not existed");
     return false;
 }
         if (!errorFolder.exists()) {
@@ -280,6 +284,7 @@ if (!errorFile.exists()|| errorFile.length()==0){
             return success;
 
         } catch (Exception e) {
+            FileLogger.logError("uploadErrorFile", "Error updload file  "+ e.getMessage()+ "     "+Log.getStackTraceString(e));
             throw new RuntimeException("Ошибка при загрузке файла: " + e.getMessage(), e);
         } finally {
             ftpConnectionManager.logout();
@@ -300,7 +305,7 @@ if (!errorFile.exists()|| errorFile.length()==0){
         List<File> files = collectFiles(mainF, "", relativePaths);
 
         if (relativePaths.isEmpty() || files.isEmpty()) {
-            Log.i("uploadAllTmp", "Нет временных файлов");
+            FileLogger.log("uploadAllTmp", "no tmp files");
             return;
         }
         boolean allFilesUploaded = true;
@@ -351,6 +356,7 @@ if (!errorFile.exists()|| errorFile.length()==0){
         } catch (IOException e) {
             allFilesUploaded = false;
             FileManagerDesktop.renameAllTmpWithReplace(new File(baseDir,mainFolderName),dateTimeManager);
+            FileLogger.logError("uploadAllTmpWithValid", e.getMessage()+ "     "+ Log.getStackTraceString(e));
             throw new RuntimeException(e);
         }finally {
             if (ftpConnectionManager.isConnected()) {
@@ -360,6 +366,7 @@ if (!errorFile.exists()|| errorFile.length()==0){
         }
 
         if (allFilesUploaded) {
+            FileLogger.log("uploadAllTmpWithValid", "deleteAllTmp call");
             FileManagerDesktop.deleteAllTmp(context, dateTimeManager);
         }
     }
@@ -375,11 +382,12 @@ if (!errorFile.exists()|| errorFile.length()==0){
                 activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        FileLogger.logError("cardTask", "NO INTERNET, uiThread");
                         Toast.makeText(context, "Проверка файла карточек невозможна так как интернет отсутствует, повтор через 2 минуты",Toast.LENGTH_LONG).show();
 
                     }
                 });
-                Log.e("CardTask","НЕТ ИНТЕРНЕТА");
+                FileLogger.logError("cardTask", "NO INTERNET");
               //  throw new RuntimeException("Нет интернета");
                 }
 
@@ -393,6 +401,7 @@ if (!errorFile.exists()|| errorFile.length()==0){
                         activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
+                                FileLogger.log("uploadTmpAndErrorTask", "sync start, uiThread");
                                 Toast.makeText(context,"НАЧАТА СИНХРОНИЗАЦИЯ С СЕРВЕРОМ, НЕ ОТКЛЮЧАЙТЕ ПРИЛОЖЕНИЕ", Toast.LENGTH_LONG).show();
                             }
                         });
@@ -400,11 +409,13 @@ if (!errorFile.exists()|| errorFile.length()==0){
                         uploadAllTmpWithValidation(context,dateTimeManager);
                         uploadErrorFile(context,dateTimeManager);
                     } catch (RuntimeException e) {
+                        FileLogger.logError("uploadTmpAndErrorTask", "Exception   "+ e.getMessage()+"    "+ Log.getStackTraceString(e));
                         throw new RuntimeException(e);
                     }finally {
                         activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
+                                FileLogger.log("uploadTmpAndErrorTask", "sync end, 3 min repeat, ui thread");
                                 Toast.makeText(context,"СИНХРОНИЗАЦИЯ ЗАВЕРШЕНА, ПОВТОР ЧЕРЕЗ 3 МИНУТЫ ", Toast.LENGTH_LONG).show();
                             }
                         });
@@ -413,10 +424,11 @@ if (!errorFile.exists()|| errorFile.length()==0){
               //  }).start();
 
             }else {
-                Log.e("UploadErrAndTMPTasks","Нет Интернета");
+                FileLogger.logError("uploadTmpAndErrorTask", "NO INTERNET ");
                activity.runOnUiThread(new Runnable() {
                    @Override
                    public void run() {
+                       FileLogger.logError("uploadTmpAndErrorTask", "NO INTERNET, uiThread ");
                        Toast.makeText(context,"Синхронизация невозможна так как интернет отсутствует, повтор через 3 минуты",Toast.LENGTH_LONG).show();
 
                    }

@@ -37,6 +37,8 @@ import com.simurg.workclock.file.FileManagerDesktop;
 import com.simurg.workclock.ftp.FTPConnectionManager;
 import com.simurg.workclock.ftp.FTPFileManager;
 import com.simurg.workclock.ftp.FTPThreadTasks;
+import com.simurg.workclock.log.FileLogger;
+import com.simurg.workclock.log.LogCatToFile;
 import com.simurg.workclock.network.NetworkUtils;
 import com.simurg.workclock.template.HtmlEditor;
 import com.simurg.workclock.thread.ThreadManager;
@@ -56,6 +58,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -79,12 +82,19 @@ public class MainActivity extends AppCompatActivity {
     CsvReader csvReader;
     private FTPFileManager ftpFileManager;
     File mainFolder;
-
+public static AtomicInteger logNumber;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
+        LogCatToFile.init(this);
+        Log.e("999999999999999999999999", "CALLING  ONCREATE");
+        FileLogger.init(this);
+
+
+
         View decorView = getWindow().getDecorView();
         int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
         decorView.setSystemUiVisibility(uiOptions);

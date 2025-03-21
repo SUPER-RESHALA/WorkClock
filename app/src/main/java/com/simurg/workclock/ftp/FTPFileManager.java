@@ -2,6 +2,8 @@ package com.simurg.workclock.ftp;
 
 import android.util.Log;
 
+import com.simurg.workclock.log.FileLogger;
+
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
@@ -31,14 +33,14 @@ public class FTPFileManager {
             if (!success) {
                 int replyCode = ftpClient.getReplyCode();
                 String replyMessage = ftpClient.getReplyString();
-                Log.e("FTP   LOAD   FILE","Upload failed: FileName=" + localFileName
+                FileLogger.logError("uploadFile", "Upload failed: FileName=" + localFileName
                         + ", ReplyCode=" + replyCode
                         + ", ReplyMessage=" + replyMessage);
             }
-            logOperation("Upload", localFileName, "Current Directory", success);
+            FileLogger.log("uploadFile", "FileName "+ localFileName+ "  Current Dir "+success);
             return success;
         } catch (IOException e) {
-            Log.e("FTPFileManager uploadFile","Ошибка загрузки файла: " + e.getMessage() );
+            FileLogger.logError("FTPFileManager uploadFile", "Error upload file: " + e.getMessage()+ "  "+ Log.getStackTraceString(e));
             return false;
         }
     }
@@ -54,7 +56,7 @@ public class FTPFileManager {
             logOperation("Download", remoteFileName, localFilePath, success);
             return success;
         } catch (IOException e) {
-            Log.e("FTPFileManager download file ","Ошибка скачивания файла: " + e.getMessage());
+            FileLogger.logError("FTPFileManager download file", "Error upload file: " + e.getMessage()+ "  "+Log.getStackTraceString(e));
             return false;
         }
     }
@@ -82,7 +84,7 @@ public class FTPFileManager {
             logOperation("Create Directory", directoryName, "Current Directory", success);
             return success;
         } catch (IOException e) {
-            System.err.println("Ошибка создания директории: " + e.getMessage());
+            FileLogger.logError("Error mkDir:", e.getMessage()+"  "+Log.getStackTraceString(e) );
             return false;
         }
     }
@@ -93,10 +95,10 @@ public class FTPFileManager {
     public boolean changeWorkingDirectory(String remoteDirectoryPath) {
         try {
             boolean success = ftpClient.changeWorkingDirectory(remoteDirectoryPath);
-            logOperation("Change Directory", remoteDirectoryPath, null, success);
+            FileLogger.log("changeWorkingDirectory", "Change to " +remoteDirectoryPath + "  "+ success);
             return success;
         } catch (IOException e) {
-            System.err.println("Ошибка смены рабочей директории: " + e.getMessage());
+            FileLogger.logError("Error change working dir", e.getMessage()+ "   "+Log.getStackTraceString(e));
             return false;
         }
     }
@@ -108,7 +110,7 @@ public class FTPFileManager {
         try {
             return ftpClient.printWorkingDirectory();
         } catch (IOException e) {
-            System.err.println("Ошибка получения текущей рабочей директории: " + e.getMessage());
+            FileLogger.logError("getCurrentWorkingDirectory", "error get current work dir "+ e.getMessage()+ "    "+ Log.getStackTraceString(e));
             return null;
         }
     }
@@ -126,10 +128,10 @@ public class FTPFileManager {
     public boolean navigateToParentDirectory() {
         try {
             boolean success = ftpClient.changeToParentDirectory();
-            logOperation("Navigate To Parent Directory", null, null, success);
+           FileLogger.log("navigateToParentDirectory", " navigToParDir"+success);
             return success;
         } catch (IOException e) {
-            System.err.println("Ошибка навигации вверх: " + e.getMessage());
+            FileLogger.logError("navigateToParentDirectory", "Error navigateToParDir "+e.getMessage()+"  "+ Log.getStackTraceString(e));
             return false;
         }
     }
@@ -167,7 +169,7 @@ public class FTPFileManager {
                 boolean created = ftpFileManager.createDirectory(currentPath);
 
                 if (!created) {
-                    Log.e("FTPFileManager/ensureAndChangeToDirectory", "Не удалось создать директорию: " + currentPath);
+                    FileLogger.logError("FTPFileManager/ensureAndChangeToDirectory", "Error mkdir "+currentPath );
                     return false;
                 }
 
@@ -182,11 +184,11 @@ public boolean moveCurrentDir(FTPFileManager ftpFileManager, String path) throws
         if (!Objects.equals(ftpFileManager.getCurrentWorkingDirectory(),path)){
           ftpFileManager.navigateToParentDirectory();
           if (!ensureAndChangeToDirectory(ftpFileManager,path)){
-              Log.e("moveCurrentDir", "не удалось перейти в директорию "+ path);
+              FileLogger.logError("moveCurrentDir", " Cant change dir "+ path);
               return false;
           }
         }
-        Log.i("moveCurrentDir", "Успешно перешли в "+ path);
+        FileLogger.log("moveCurrentDir", "Success move to "+ path);
         return  true;
 }//end of method
     public boolean fileExists(String fileName) {
@@ -194,7 +196,7 @@ public boolean moveCurrentDir(FTPFileManager ftpFileManager, String path) throws
             FTPFile[] files = ftpClient.listFiles(fileName); // Проверяем текущую директорию
             return files.length > 0 && files[0].isFile(); // Если найдено, проверяем, что это файл
         } catch (IOException e) {
-            Log.e("FTPFileManager fileExists ", "Ошибка при проверке существования файла: " + e.getMessage());
+            FileLogger.logError("FTPFileManager fileExists", "Error file exists "+ e.getMessage()+ "   "+ Log.getStackTraceString(e) );
             return false;
         }
     }

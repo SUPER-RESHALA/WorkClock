@@ -10,6 +10,7 @@ import android.widget.Toast;
 import com.simurg.workclock.R;
 import com.simurg.workclock.entity.DeviceId;
 import com.simurg.workclock.file.FileManagerDesktop;
+import com.simurg.workclock.log.FileLogger;
 
 import java.util.Objects;
 
@@ -22,6 +23,9 @@ public class Dialog {
     }
     public void setupDialog(android.app.Dialog dialog) {
         dialog.setContentView(R.layout.dialog_layout);
+        if (dialog.getWindow()==null){
+            FileLogger.logError("SetupDialog", "dialog.getWindow Is null");
+        }
         Objects.requireNonNull(dialog.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.setCancelable(false); // Блокируем отмену диалога кнопкой "Назад".
     }

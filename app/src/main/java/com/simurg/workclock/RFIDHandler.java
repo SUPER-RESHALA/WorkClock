@@ -13,6 +13,7 @@ import com.simurg.workclock.entity.Employee;
 import com.simurg.workclock.file.CsvReader;
 import com.simurg.workclock.file.DataQueueManager;
 import com.simurg.workclock.file.FileManagerDesktop;
+import com.simurg.workclock.log.FileLogger;
 import com.simurg.workclock.ui.UiManager;
 
 import java.io.File;
@@ -103,6 +104,7 @@ public class RFIDHandler {
         File errorFile = new File(mainFolder, "error.txt");
         // Проверяем обновление или отсутствие файла
         if (isCsvUpdatingOrMissing(csvReader, csvFile, errorFile, data, activity, dateTimeManager, mainFolderName)) {
+            FileLogger.log("processScannedData", "isCsvUpdatingOrMissing");
             return;
         }
         // Проверяем изменения в CSV-файле
@@ -118,7 +120,7 @@ public class RFIDHandler {
     private boolean isCsvUpdatingOrMissing(CsvReader csvReader, File csvFile, File errorFile, String data, Activity activity, DateTimeManager dateTimeManager, String mainFolderName
     ) {
         if (csvReader.checkIsUpdating() || !csvFile.exists()) {
-            Log.w("ProcessScannedData", "Csv-файл не существует или обновляется");
+            FileLogger.log("processScannedData", "isCsvUpdatingOrMissing");
             appendToErrorFile(errorFile, data, activity, dateTimeManager, mainFolderName);
             return true;
         }
@@ -129,9 +131,9 @@ public class RFIDHandler {
         if (csvFile.length() != initCsvFileSize) {
             initCsvFileSize = csvFile.length();
             map = csvReader.readCsvToMap(csvFile.getAbsolutePath());
-            Log.i("ProcessScannedData", "Файл изменился, Map обновлен.");
+            FileLogger.log("updateCsvIfChanged", "file changed, Map updating");
         } else {
-            Log.i("ProcessScannedData", "Файл не изменился, Map не обновляется.");
+            FileLogger.log("updateCsvIfChanged", "file Not changed, Map  not updating");
         }
     }
 
@@ -195,6 +197,7 @@ public class RFIDHandler {
             activity.runOnUiThread(() ->
                     Toast.makeText(activity, "Время зафиксировано для "+ data+" идет синхронизация с сервером, данные добавятся позже", Toast.LENGTH_SHORT).show()
             );
+            FileLogger.log("addData", "Time fixed for "+ data+ " sync in progress, data add later");
             dataQueueManager.addDataToQueue(data+dateTime); // Добавляем в основную очередь
         }  // Добавляем во временную очередь
         else {
@@ -225,10 +228,10 @@ public class RFIDHandler {
                 map=csvReader.readCsvToMap(csvFile.getAbsolutePath());
                 Log.i( "-----------------", "FILE CHANGED");
             }else {
-                System.out.println("File doesnt changed, no need to read");
+                FileLogger.log("processScannedDataFromQueue", "File doesnt changed, no need to read");
             }
         }else {
-            Log.e("processScannedData", "File not exist");
+            FileLogger.logError("processScannedDataFromQueue","File not exist" );
         }
         if (map.isEmpty()){
             employee=null;
@@ -269,6 +272,7 @@ public class RFIDHandler {
                        // Toast.makeText(context, "Этот жетон уже был отсканирован. Пожалуйста, подождите минуту.", Toast.LENGTH_SHORT).show();
                     }
                 });
+                FileLogger.log("checkToken", "token was also scanned");
                 return false;  // Запрещаем сканирование
             }
         }

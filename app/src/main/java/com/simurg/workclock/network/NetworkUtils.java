@@ -2,9 +2,13 @@ package com.simurg.workclock.network;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+
+import com.simurg.workclock.log.FileLogger;
+
 public class NetworkUtils {
 
     public static boolean isNetworkConnected(Context context) {
+        FileLogger.log("isNetworkConnected", "NetworkCheck called");
         ConnectivityManager connectivityManager =
                 (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
