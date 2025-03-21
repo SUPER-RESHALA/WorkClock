@@ -6,6 +6,7 @@ import android.util.Log;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -14,10 +15,11 @@ public class FileLogger  {
 
     private static final String LOG_TAG = "FileLogger";
     private static  String LOG_FILE_NAME = "app_logs.txt";
+    private static final String LOG_FOLDER_NAME="LOGS";
     private static File logFile;
 
     public static void init(Context context) {
-        File logDir = new File(context.getExternalFilesDir(null), LOG_FILE_NAME);
+        File logDir = new File(context.getExternalFilesDir(null), LOG_FOLDER_NAME);
        // File logDir = new File(context.getFilesDir(), "logs");
         if (!logDir.exists()) {
             logDir.mkdirs();  // Создание директории для логов
@@ -55,15 +57,15 @@ public class FileLogger  {
     public static String getLogFilePath() {
         return logFile != null ? logFile.getAbsolutePath() : null;
     }
-//public static void checkAndDeleteLog(Context context){
-//        File logFile= new File(getLogFilePath());
-//        if (logFile.exists() && logFile.length() > 5* 1024 * 1024){
-//           if (logFile.delete()){
-//               LOG_FILE_NAME= "app_logs"+"NUMBER"+".txt";
-//               init(context);
-//           }else {
-//               FileLogger.logError("checkAndDeleteLog", "cant delete File "+ logFile.getAbsolutePath());
-//           }
-//        }
-//}
+public static void checkAndDeleteLog(Context context){
+        File logFile= new File(getLogFilePath());
+        if (logFile.exists() && logFile.length() > 5* 1024 * 1024){
+           if (logFile.delete()){
+               LOG_FILE_NAME= "app_logs"+"NUMBER"+".txt";
+               init(context);
+           }else {
+               FileLogger.logError("checkAndDeleteLog", "cant delete File "+ logFile.getAbsolutePath());
+           }
+        }
+}
 }
