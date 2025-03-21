@@ -3,6 +3,7 @@ package com.simurg.workclock.log;
 import android.content.Context;
 import android.util.Log;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -45,12 +46,14 @@ public class FileLogger  {
 
         String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
         String logMessage = timeStamp + " [" + tag + "] " + message + "\n";
-
-        try (FileWriter writer = new FileWriter(logFile, true)) {  // true = append mode
-            writer.append(logMessage);
-        } catch (IOException e) {
-            Log.e(LOG_TAG, "Failed to write log to file", e);
-        }
+synchronized (FileLogger.class){
+    try(BufferedWriter writer = new BufferedWriter(new FileWriter(logFile,true))){
+        writer.append(logMessage);
+        writer.flush();
+    }catch(IOException e){
+        Log.e(LOG_TAG, "Failed to write log to file", e);
+    }
+}
     }
 
     // Метод для получения пути к файлу логов (например, для отправки на сервер)
