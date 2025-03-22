@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.simurg.workclock.data.DateTimeManager;
@@ -120,7 +121,7 @@ public class RFIDHandler {
     private boolean isCsvUpdatingOrMissing(CsvReader csvReader, File csvFile, File errorFile, String data, Activity activity, DateTimeManager dateTimeManager, String mainFolderName
     ) {
         if (csvReader.checkIsUpdating() || !csvFile.exists()) {
-            FileLogger.log("processScannedData", "isCsvUpdatingOrMissing");
+            FileLogger.log("processScannedData", "isCsvUpdatingOrMissing CSV FILE CAN BE MISSED OR UPDATE");
             appendToErrorFile(errorFile, data, activity, dateTimeManager, mainFolderName);
             return true;
         }

@@ -118,7 +118,6 @@ public class UiManager {
 
         // Делаем элемент видимым
         element.setVisibility(View.VISIBLE);
-
         // Используем Handler, чтобы скрыть элемент через 1 секунду
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             element.setVisibility(View.GONE);
@@ -130,7 +129,6 @@ public class UiManager {
 
         // Делаем элемент невидимым
         element.setVisibility(View.GONE);
-
         // Используем Handler, чтобы сделать элемент видимым через 1 секунду
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             element.setVisibility(View.VISIBLE);

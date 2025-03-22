@@ -20,6 +20,7 @@ public class FileLogger  {
     private static File logFile;
 
     public static void init(Context context) {
+        Log.i("initLogger", "Init logger");
         File logDir = new File(context.getExternalFilesDir(null), LOG_FOLDER_NAME);
        // File logDir = new File(context.getFilesDir(), "logs");
         if (!logDir.exists()) {
