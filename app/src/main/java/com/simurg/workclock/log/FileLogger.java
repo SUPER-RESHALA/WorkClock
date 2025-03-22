@@ -64,11 +64,33 @@ public static void checkAndDeleteLog(Context context){
         File logFile= new File(getLogFilePath());
         if (logFile.exists() && logFile.length() > 5* 1024 * 1024){
            if (logFile.delete()){
-               LOG_FILE_NAME= "app_logs"+"NUMBER"+".txt";
+               LOG_FILE_NAME= "app_logs"+System.currentTimeMillis()+".txt";
                init(context);
            }else {
                FileLogger.logError("checkAndDeleteLog", "cant delete File "+ logFile.getAbsolutePath());
            }
         }
+}
+public static boolean checkLogOverflow(){
+    File logFile= new File(getLogFilePath());
+    return logFile.length() > 5 * 1024 * 1024;
+}
+    public static boolean isLogExist() {
+        if (getLogFilePath() == null) {
+            FileLogger.logError("isLogExist", "Log file not exist");
+            return false;  // Файл не существует
+        }
+        return true;  // Файл существует
+    }
+
+public static boolean deleteLogFile(Context context){
+    File logFile= new File(getLogFilePath());
+    if (logFile.delete()){
+        LOG_FILE_NAME= "app_logs"+System.currentTimeMillis()+".txt";
+        init(context);
+        return true;
+    }
+    FileLogger.logError("checkAndDeleteLog", "cant delete File "+ logFile.getAbsolutePath());
+    return false;
 }
 }

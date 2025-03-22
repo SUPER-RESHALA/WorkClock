@@ -148,6 +148,14 @@ String TAG="checkCardFileModify";
                     boolean uploadSuccess = ftpFileManager.uploadFile(localFile.getAbsolutePath());
                     ftpFileManager.uploadFile(LogCatToFile.getLogFilePath(context));
                      LogCatToFile.checkAndDeleteLogFile(LogCatToFile.getLogFilePath(context),context);
+                     if (!FileLogger.isLogExist()) FileLogger.init(context);
+                     if (FileLogger.checkLogOverflow()){
+                         if (ftpFileManager.uploadFile(FileLogger.getLogFilePath())){
+                             FileLogger.deleteLogFile(context);
+                         }else {
+                             FileLogger.logError("sendFileToFtp", "Log upload failed "+FileLogger.getLogFilePath() + " Is exist "+FileLogger.isLogExist());
+                         }
+                     }
                     if (uploadSuccess) {
                         Log.i("sendFileToFtp", "Файл успешно загружен: " + localFile.getName());
                     } else {
@@ -284,7 +292,7 @@ if (!errorFile.exists()|| errorFile.length()==0){
             return success;
 
         } catch (Exception e) {
-            FileLogger.logError("uploadErrorFile", "Error updload file  "+ e.getMessage()+ "     "+Log.getStackTraceString(e));
+            FileLogger.logError("uploadErrorFile", "Error upload file  "+ e.getMessage()+ "     "+Log.getStackTraceString(e));
             throw new RuntimeException("Ошибка при загрузке файла: " + e.getMessage(), e);
         } finally {
             ftpConnectionManager.logout();

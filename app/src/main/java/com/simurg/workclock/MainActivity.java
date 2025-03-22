@@ -230,6 +230,7 @@ public static AtomicInteger logNumber;
                 try {
                     sendFileToFtp(context, localFolderName, dateTimeManager);
                 } catch (InterruptedException e) {
+                    FileLogger.logError("startUploadingFileEveryMinute", e.getMessage());
                     throw new RuntimeException(e);
                 }
                // FTPThreadTasks.checkCardFileModify(context);
