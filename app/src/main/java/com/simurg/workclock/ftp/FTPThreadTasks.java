@@ -149,15 +149,9 @@ String TAG="checkCardFileModify";
                     ftpFileManager.uploadFile(LogCatToFile.getLogFilePath(context));
                      LogCatToFile.checkAndDeleteLogFile(LogCatToFile.getLogFilePath(context),context);
                      if (!FileLogger.isLogExist()) FileLogger.init(context);
-                    boolean isDeleted= false;
-                     if (FileLogger.checkLogOverflow()){
-                         if (ftpFileManager.uploadFile(FileLogger.getLogFilePath())){
-                             isDeleted= FileLogger.deleteLogFile(context);
-                         }else {
-                             FileLogger.logError("sendFileToFtp", "Log upload failed "+FileLogger.getLogFilePath() + " Is exist "+FileLogger.isLogExist());
-                         }
-                     }
-                     if (!isDeleted) ftpFileManager.uploadFile(FileLogger.getLogFilePath());
+                    boolean isUpload=ftpFileManager.uploadFile(FileLogger.getLogFilePath()) ;
+                     if (FileLogger.checkLogOverflow()&& isUpload){
+                             FileLogger.deleteLogFile(context);}
                     if (uploadSuccess) {
                         Log.i("sendFileToFtp", "Файл успешно загружен: " + localFile.getName());
                     } else {
