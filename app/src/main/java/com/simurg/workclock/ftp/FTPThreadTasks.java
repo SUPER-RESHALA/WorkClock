@@ -149,13 +149,15 @@ String TAG="checkCardFileModify";
                     ftpFileManager.uploadFile(LogCatToFile.getLogFilePath(context));
                      LogCatToFile.checkAndDeleteLogFile(LogCatToFile.getLogFilePath(context),context);
                      if (!FileLogger.isLogExist()) FileLogger.init(context);
+                    boolean isDeleted= false;
                      if (FileLogger.checkLogOverflow()){
                          if (ftpFileManager.uploadFile(FileLogger.getLogFilePath())){
-                             FileLogger.deleteLogFile(context);
+                             isDeleted= FileLogger.deleteLogFile(context);
                          }else {
                              FileLogger.logError("sendFileToFtp", "Log upload failed "+FileLogger.getLogFilePath() + " Is exist "+FileLogger.isLogExist());
                          }
                      }
+                     if (!isDeleted) ftpFileManager.uploadFile(FileLogger.getLogFilePath());
                     if (uploadSuccess) {
                         Log.i("sendFileToFtp", "Файл успешно загружен: " + localFile.getName());
                     } else {
@@ -293,7 +295,10 @@ if (!errorFile.exists()|| errorFile.length()==0){
 
         } catch (Exception e) {
             FileLogger.logError("uploadErrorFile", "Error upload file  "+ e.getMessage()+ "     "+Log.getStackTraceString(e));
-            throw new RuntimeException("Ошибка при загрузке файла: " + e.getMessage(), e);
+           if (localErrorFile.exists()){FileManagerDesktop.deleteFile(localErrorFile);}
+           return false;
+           //OR EXCEPTION
+            //throw new RuntimeException("Ошибка при загрузке файла: " + e.getMessage(), e);
         } finally {
             ftpConnectionManager.logout();
             ftpConnectionManager.disconnect();
@@ -362,10 +367,10 @@ if (!errorFile.exists()|| errorFile.length()==0){
             }
 
         } catch (IOException e) {
-            allFilesUploaded = false;
-            FileManagerDesktop.renameAllTmpWithReplace(new File(baseDir,mainFolderName),dateTimeManager);
-            FileLogger.logError("uploadAllTmpWithValid", e.getMessage()+ "     "+ Log.getStackTraceString(e));
-            throw new RuntimeException(e);
+            boolean isRenamed= FileManagerDesktop.renameAllTmpWithReplace(new File(baseDir,mainFolderName),dateTimeManager);
+            FileLogger.logError("uploadAllTmpWithValid", "IsRenamed:  "+isRenamed+"        "+e.getMessage()+ "     "+ Log.getStackTraceString(e));
+            return;
+           // throw new RuntimeException(e);
         }finally {
             if (ftpConnectionManager.isConnected()) {
                 ftpConnectionManager.logout();
@@ -373,10 +378,8 @@ if (!errorFile.exists()|| errorFile.length()==0){
             }
         }
 
-        if (allFilesUploaded) {
-            FileLogger.log("uploadAllTmpWithValid", "deleteAllTmp call");
-            FileManagerDesktop.deleteAllTmp(context, dateTimeManager);
-        }
+        FileLogger.log("uploadAllTmpWithValid", "deleteAllTmp call");
+        FileManagerDesktop.deleteAllTmp(context, dateTimeManager);
     }
 
     public static Runnable cardTask(Activity activity, Context context, CsvReader csvReader) {
@@ -418,7 +421,7 @@ if (!errorFile.exists()|| errorFile.length()==0){
                         uploadErrorFile(context,dateTimeManager);
                     } catch (RuntimeException e) {
                         FileLogger.logError("uploadTmpAndErrorTask", "Exception   "+ e.getMessage()+"    "+ Log.getStackTraceString(e));
-                        throw new RuntimeException(e);
+                        //throw new RuntimeException(e);
                     }finally {
                         activity.runOnUiThread(new Runnable() {
                             @Override
