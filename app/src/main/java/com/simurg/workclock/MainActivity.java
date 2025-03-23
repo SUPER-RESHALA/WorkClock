@@ -90,11 +90,7 @@ public static AtomicInteger logNumber;
         setContentView(R.layout.activity_main);
 
         LogCatToFile.init(this);
-        Log.e("999999999999999999999999", "CALLING  ONCREATE");
-        FileLogger.init(this);
-
-
-
+        Log.e("MainActivity(OnCreate)", "CALLING  ONCREATE");
         View decorView = getWindow().getDecorView();
         int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
         decorView.setSystemUiVisibility(uiOptions);
@@ -105,7 +101,8 @@ public static AtomicInteger logNumber;
             window.setNavigationBarColor(Color.BLACK);
         }
         // Инициализация ActivityResultLauncher
-        showDialog("WorkClockFiles", "id.txt");
+      if (showDialog("WorkClockFiles", "id.txt")) {return;}
+        FileLogger.init(this);
         String filePath = this.getExternalFilesDir(null) + "/WorkClockFiles/cards.csv";
         File baseDir = this.getExternalFilesDir(null); // Базовая директория приложения
         mainFolder = new File(baseDir, mainFolderName);
@@ -170,7 +167,7 @@ public static AtomicInteger logNumber;
 //        }, 0, 4000, TimeUnit.MILLISECONDS);
        // mainSheduler.scheduleWithFixedDelay(FTPThreadTasks.testFunction2(context),0,60000,TimeUnit.MILLISECONDS);
     }
-    private void showDialog(String folderName, String fileName) {
+    private boolean showDialog(String folderName, String fileName) {
 
         File folder = new File(getExternalFilesDir(null), folderName);
         File file = new File(folder, fileName);
@@ -181,9 +178,9 @@ public static AtomicInteger logNumber;
             startActivity(intent);
             finish();
              // Завершаем текущую активность, чтобы избежать возврата к MainActivity
-            return;
+            return true;
         }
-
+        return false;
     }
 
     private void startUpdatingTime() {

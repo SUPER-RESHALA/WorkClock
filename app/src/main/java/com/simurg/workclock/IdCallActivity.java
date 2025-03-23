@@ -1,7 +1,9 @@
 package com.simurg.workclock;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -53,6 +55,10 @@ public class IdCallActivity extends AppCompatActivity {
               if (!deviceId.isValid()) {
                   Toast.makeText(IdCallActivity.this, "Неверный ввод ID устройства (должен содержать от 5 до 30 цифр)", Toast.LENGTH_SHORT).show();
               }else {
+                  SharedPreferences prefs=getApplicationContext().getSharedPreferences("my_prefs", Context.MODE_PRIVATE);
+                  SharedPreferences.Editor editor=prefs.edit();
+                  editor.putString("id",deviceId.getId());
+                  editor.apply();
                   FileManagerDesktop.createCustomFolder(IdCallActivity.this,"WorkClockFiles");
               FileManagerDesktop.createFile(IdCallActivity.this,"WorkClockFiles","id.txt",deviceId.getId());
                   Intent intent = new Intent(IdCallActivity.this, MainActivity.class);

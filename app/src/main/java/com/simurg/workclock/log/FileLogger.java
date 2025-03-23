@@ -1,6 +1,7 @@
 package com.simurg.workclock.log;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import java.io.BufferedWriter;
@@ -26,6 +27,11 @@ public class FileLogger  {
         if (!logDir.exists()) {
             logDir.mkdirs();  // Создание директории для логов
         }
+        SharedPreferences prefs= context.getApplicationContext().getSharedPreferences("my_prefs", Context.MODE_PRIVATE);
+        String time="time"+System.currentTimeMillis();
+        String id ="idIs"+prefs.getString("id",time);
+        if (!id.equals(time)){id+=time;}
+        LOG_FILE_NAME= "app_logs"+id+".txt";
         logFile = new File(logDir, LOG_FILE_NAME);
     }
 
@@ -87,7 +93,7 @@ public static boolean checkLogOverflow(){
 public static boolean deleteLogFile(Context context){
     File logFile= new File(getLogFilePath());
     if (logFile.delete()){
-        LOG_FILE_NAME= "app_logs"+System.currentTimeMillis()+".txt";
+       // LOG_FILE_NAME= "app_logs"+System.currentTimeMillis()+".txt";
         init(context);
         return true;
     }
