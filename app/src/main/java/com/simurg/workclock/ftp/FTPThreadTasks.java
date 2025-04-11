@@ -44,8 +44,11 @@ String TAG="checkCardFileModify";
      ftpConnectionManager.getFtpClient().enterLocalPassiveMode(); // Пассивный режим
 
     try {
-        ftpConnectionManager.connect(FTPConnectionManager.hostname);
-        ftpConnectionManager.login(FTPConnectionManager.user, FTPConnectionManager.password);
+        if (!ftpConnectionManager.isConnected()){
+            ftpConnectionManager.connect(FTPConnectionManager.hostname);
+            ftpConnectionManager.login(FTPConnectionManager.user, FTPConnectionManager.password);
+        }
+
         if (!Objects.equals(ftpFileManager.getCurrentWorkingDirectory(), "settings/")){
         ftpFileManager.navigateToParentDirectory();
         ftpFileManager.changeWorkingDirectory("settings/");
@@ -110,8 +113,8 @@ String TAG="checkCardFileModify";
         FileLogger.logError(TAG, "Error checking card or download "+ e.getMessage()+"   "+ Log.getStackTraceString(e));
         if (csvReader.checkIsUpdating()){csvReader.finishUpdate();}
     }finally {
-        ftpConnectionManager.logout();
-        ftpConnectionManager.disconnect();
+       // ftpConnectionManager.logout();
+        //ftpConnectionManager.disconnect();
         Log.i(TAG, "Соединение с FTP-сервером закрыто.");
         if (csvReader.checkIsUpdating()){csvReader.finishUpdate();}
 
@@ -136,8 +139,11 @@ String TAG="checkCardFileModify";
                         FileLogger.logError("sendFileToFtp"," File not created    "+(localFile != null ? localFile.getAbsolutePath() : "null") );
                         return;
                     }
-                    ftpConnectionManager.connect(FTPConnectionManager.hostname);
-                    ftpConnectionManager.login(FTPConnectionManager.user, FTPConnectionManager.password);
+                    if (!ftpConnectionManager.isConnected()){
+                        ftpConnectionManager.connect(FTPConnectionManager.hostname);
+                        ftpConnectionManager.login(FTPConnectionManager.user, FTPConnectionManager.password);
+                    }
+
                     Log.i("sendFileToFtp", "Текущая рабочая директория: " + ftpFileManager.getCurrentWorkingDirectory());
                     if (!Objects.equals(ftpFileManager.getCurrentWorkingDirectory(), "settings/")){
                         ftpFileManager.navigateToParentDirectory();
@@ -160,8 +166,8 @@ String TAG="checkCardFileModify";
                 } catch (Exception e) {
                     FileLogger.logError("sendToFTP"," Error Ftp "+ e.getMessage()+"     "+Log.getStackTraceString(e));
                 } finally {
-                    ftpConnectionManager.logout();
-                    ftpConnectionManager.disconnect();
+                  //  ftpConnectionManager.logout();
+                   // ftpConnectionManager.disconnect();
                 }
             }).start();
 
@@ -249,8 +255,11 @@ if (!errorFile.exists()|| errorFile.length()==0){
         }
 
         try {
-            ftpConnectionManager.connect(FTPConnectionManager.hostname);
-            ftpConnectionManager.login(FTPConnectionManager.user, FTPConnectionManager.password);
+            if(!ftpConnectionManager.isConnected()){
+                ftpConnectionManager.connect(FTPConnectionManager.hostname);
+                ftpConnectionManager.login(FTPConnectionManager.user, FTPConnectionManager.password);
+            }
+
             ftpFileManager.moveCurrentDir(ftpFileManager, ftpMonthDir);
 
             boolean success = false;
@@ -293,10 +302,11 @@ if (!errorFile.exists()|| errorFile.length()==0){
            return false;
            //OR EXCEPTION
             //throw new RuntimeException("Ошибка при загрузке файла: " + e.getMessage(), e);
-        } finally {
-            ftpConnectionManager.logout();
-            ftpConnectionManager.disconnect();
         }
+        //finally {
+           // ftpConnectionManager.logout();
+            //ftpConnectionManager.disconnect();
+      //  }
     }
 
     public static void uploadAllTmpWithValidation(Context context, DateTimeManager dateTimeManager) {
@@ -318,8 +328,11 @@ if (!errorFile.exists()|| errorFile.length()==0){
         boolean allFilesUploaded = true;
 
         try {
-            ftpConnectionManager.connect(FTPConnectionManager.hostname);
-            ftpConnectionManager.login(FTPConnectionManager.user, FTPConnectionManager.password);
+            if (!ftpConnectionManager.isConnected()){
+                ftpConnectionManager.connect(FTPConnectionManager.hostname);
+                ftpConnectionManager.login(FTPConnectionManager.user, FTPConnectionManager.password);
+            }
+
 
             for (int i = 0; i < files.size(); i++) {
                 String relativePath = relativePaths.get(i);
@@ -365,12 +378,13 @@ if (!errorFile.exists()|| errorFile.length()==0){
             FileLogger.logError("uploadAllTmpWithValid", "IsRenamed:  "+isRenamed+"        "+e.getMessage()+ "     "+ Log.getStackTraceString(e));
             return;
            // throw new RuntimeException(e);
-        }finally {
-            if (ftpConnectionManager.isConnected()) {
-                ftpConnectionManager.logout();
-                ftpConnectionManager.disconnect();
-            }
         }
+//        finally {
+//            if (ftpConnectionManager.isConnected()) {
+//                ftpConnectionManager.logout();
+//                ftpConnectionManager.disconnect();
+//            }
+//        }
 
         FileLogger.log("uploadAllTmpWithValid", "deleteAllTmp call");
         FileManagerDesktop.deleteAllTmp(context, dateTimeManager);
