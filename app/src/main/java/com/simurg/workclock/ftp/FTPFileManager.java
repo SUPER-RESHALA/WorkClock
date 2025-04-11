@@ -49,15 +49,12 @@ public class FTPFileManager {
     /**
      * Скачивание файла из текущей рабочей директории.
      */
-    public boolean downloadFile(String remoteFileName, String localFilePath) {
+    public boolean downloadFile(String remoteFileName, String localFilePath) throws IOException {
         try (FileOutputStream fos = new FileOutputStream(new File(localFilePath))) {
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
             boolean success = ftpClient.retrieveFile(remoteFileName, fos);
             logOperation("Download", remoteFileName, localFilePath, success);
             return success;
-        } catch (IOException e) {
-            FileLogger.logError("FTPFileManager download file", "Error upload file: " + e.getMessage()+ "  "+Log.getStackTraceString(e));
-            return false;
         }
     }
 

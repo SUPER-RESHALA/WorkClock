@@ -78,6 +78,9 @@ stringBuilder.insert(indexOfTableTag,newRow);
         // Формируем строку, которую добавим в таблицу
 
         int indexOfTableTag=finalContent.indexOf("</table>");
+//        if(indexOfTableTag==-1){
+//            //TODO Сделай исключение
+//        }
         StringBuilder stringBuilder=new StringBuilder(finalContent);
         stringBuilder.insert(indexOfTableTag,rowsToAdd);
         return stringBuilder.toString();
