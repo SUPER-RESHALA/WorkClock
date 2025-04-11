@@ -58,7 +58,7 @@ public class IdCallActivity extends AppCompatActivity {
                   SharedPreferences prefs=getApplicationContext().getSharedPreferences("my_prefs", Context.MODE_PRIVATE);
                   SharedPreferences.Editor editor=prefs.edit();
                   editor.putString("id",deviceId.getId());
-                  editor.apply();
+                  editor.commit();
                   FileManagerDesktop.createCustomFolder(IdCallActivity.this,"WorkClockFiles");
               FileManagerDesktop.createFile(IdCallActivity.this,"WorkClockFiles","id.txt",deviceId.getId());
                   Intent intent = new Intent(IdCallActivity.this, MainActivity.class);
