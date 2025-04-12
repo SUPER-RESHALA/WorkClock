@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import com.simurg.workclock.RFIDHandler;
 import com.simurg.workclock.data.DateTimeManager;
+import com.simurg.workclock.exception.MalformedHtmlException;
 import com.simurg.workclock.file.CsvReader;
 import com.simurg.workclock.file.DataQueueManager;
 import com.simurg.workclock.file.FileManagerDesktop;
@@ -165,9 +166,6 @@ String TAG="checkCardFileModify";
                     }
                 } catch (Exception e) {
                     FileLogger.logError("sendToFTP"," Error Ftp "+ e.getMessage()+"     "+Log.getStackTraceString(e));
-                } finally {
-                  //  ftpConnectionManager.logout();
-                   // ftpConnectionManager.disconnect();
                 }
             }).start();
 
@@ -175,63 +173,6 @@ String TAG="checkCardFileModify";
             FileLogger.logError("SendFileTOftp", "No INTERNET");
         }
     }
-//TODO: Обязательно обработать случай, когда нет временных файлов, т.е. List<File> files пуст(==null)
-    public static void uploadAllTmp(Context context, DateTimeManager dateTimeManager){
-        FTPConnectionManager ftpConnectionManager = new FTPConnectionManager();
-        FTPFileManager ftpFileManager = new FTPFileManager(ftpConnectionManager.getFtpClient());
-        String mainFolderName ="WorkClockFiles";
-        String currentYear= dateTimeManager.getYear();
-        String currentMonthYear= dateTimeManager.getFormattedMonthYear();
-        String ftpMonthDir=  currentYear+ "/"+currentMonthYear;
-        File baseDir = context.getExternalFilesDir(null); // Базовая директория приложения
-        File mainF = new File(baseDir, mainFolderName+"/" + currentYear+ "/"+currentMonthYear);
-        List<String> relativePaths = new ArrayList<>();// относительные пути файлов
-        // Получаем массив файлов
-        List<File> files = collectFiles(mainF, "", relativePaths);
-        if(relativePaths.isEmpty()|| files.isEmpty()){
-            Log.i("uploadAllTmp", "Нет временных файлов");
-            return;
-        }
-        boolean allFilesUploaded = true;
-        try{
-         ftpConnectionManager.connect(FTPConnectionManager.hostname);
-         ftpConnectionManager.login(FTPConnectionManager.user,FTPConnectionManager.password);
-         for (int i=0; i<files.size();i++){
-             String relativePath= relativePaths.get(i);
-             String fullPath=ftpMonthDir+relativePath.substring(0,relativePath.lastIndexOf("/"));
-             File currentFile= files.get(i);
-             String fileName =currentFile.getName();
-            ftpFileManager.moveCurrentDir(ftpFileManager,fullPath);
-             if (ftpFileManager.fileExists(fileName)){
-               String newLocalFileFullPath=mainFolderName+"/"+ currentYear+ "/"+currentMonthYear + relativePath.substring(0,relativePath.lastIndexOf("/")) + "/" +fileName.substring(0,fileName.indexOf("."))+"local.html";
-               String newLocalFilePath=newLocalFileFullPath.substring(0, newLocalFileFullPath.lastIndexOf("/"));
-               File localFile= new File (baseDir,newLocalFileFullPath);
-               File finalLocalFile= new File(baseDir,newLocalFilePath+"/"+fileName);
-               FileManagerDesktop.renameFile(currentFile.getAbsolutePath(), fileName.substring(0,fileName.indexOf("."))+"local.html");
-             if (ftpFileManager.downloadFile(fileName,finalLocalFile.getAbsolutePath())){
-                 HtmlEditor.mergeFiles(context,localFile,finalLocalFile);
-                 ftpFileManager.uploadFile(finalLocalFile.getAbsolutePath());
-             } else {
-                 throw new RuntimeException("Файл Не скачан дальнейшая работа невозможна");
-             }
-
-             }else {
-                 ftpFileManager.uploadFile(currentFile.getAbsolutePath());
-             }
-         }//for
-          if (ftpConnectionManager.isConnected()){
-              ftpConnectionManager.logout();
-              ftpConnectionManager.disconnect();
-          }
-        } catch (IOException e) {
-            allFilesUploaded = false;
-            throw new RuntimeException(e);
-        }
-        if (allFilesUploaded){
-          //  FileManagerDesktop.deleteAllTmp(context,dateTimeManager);
-        }
-    }// end of method uploadTmp
-
     public static boolean uploadErrorFile(Context context, DateTimeManager dateTimeManager) {
         FTPConnectionManager ftpConnectionManager = new FTPConnectionManager();
         FTPFileManager ftpFileManager = new FTPFileManager(ftpConnectionManager.getFtpClient());
@@ -243,7 +184,6 @@ String TAG="checkCardFileModify";
         File mainFolder = new File(baseDir, mainFolderName);
         File errorFile = new File(mainFolder, "error.txt");
         String fileContent;
-        //String fileContent=FileManagerDesktop.readFileContenFromFile(errorFile);
         File errorFolder = new File(mainFolder, "ErrorFolder");
         File localErrorFile = new File(errorFolder, "error.txt");
 if (!errorFile.exists()|| errorFile.length()==0){
@@ -326,7 +266,6 @@ if (!errorFile.exists()|| errorFile.length()==0){
             return;
         }
         boolean allFilesUploaded = true;
-
         try {
             if (!ftpConnectionManager.isConnected()){
                 ftpConnectionManager.connect(FTPConnectionManager.hostname);
@@ -373,19 +312,11 @@ if (!errorFile.exists()|| errorFile.length()==0){
                 }
             }
 
-        } catch (IOException e) {
+        } catch (IOException | MalformedHtmlException e) {
             boolean isRenamed= FileManagerDesktop.renameAllTmpWithReplace(new File(baseDir,mainFolderName),dateTimeManager);
-            FileLogger.logError("uploadAllTmpWithValid", "IsRenamed:  "+isRenamed+"        "+e.getMessage()+ "     "+ Log.getStackTraceString(e));
+            FileLogger.logError("uploadAllTmpWithValid", "IsRenamed:  "+isRenamed+"        "+e.getMessage());
             return;
-           // throw new RuntimeException(e);
-        }
-//        finally {
-//            if (ftpConnectionManager.isConnected()) {
-//                ftpConnectionManager.logout();
-//                ftpConnectionManager.disconnect();
-//            }
-//        }
-
+                 }
         FileLogger.log("uploadAllTmpWithValid", "deleteAllTmp call");
         FileManagerDesktop.deleteAllTmp(context, dateTimeManager);
     }

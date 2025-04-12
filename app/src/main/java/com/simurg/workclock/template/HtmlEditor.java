@@ -7,6 +7,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 
+import com.simurg.workclock.exception.MalformedHtmlException;
 import com.simurg.workclock.file.FileManagerDesktop;
 import com.simurg.workclock.log.FileLogger;
 
@@ -74,13 +75,13 @@ StringBuilder stringBuilder=new StringBuilder(finalContent);
 stringBuilder.insert(indexOfTableTag,newRow);
         return stringBuilder.toString();
     }
-    public static String addNewRowToHtml(String finalContent,String rowsToAdd) {
+    public static String addNewRowToHtml(String finalContent,String rowsToAdd) throws MalformedHtmlException {
         // Формируем строку, которую добавим в таблицу
 
         int indexOfTableTag=finalContent.indexOf("</table>");
-//        if(indexOfTableTag==-1){
-//            //TODO Сделай исключение
-//        }
+        if(indexOfTableTag==-1){
+            throw new MalformedHtmlException("Closing </table> not found!");
+        }
         StringBuilder stringBuilder=new StringBuilder(finalContent);
         stringBuilder.insert(indexOfTableTag,rowsToAdd);
         return stringBuilder.toString();
@@ -126,7 +127,7 @@ stringBuilder.insert(indexOfTableTag,newRow);
 
         return dataRows.toString();  // Возвращаем все строки как одну строку
     }
-    public static File mergeFiles(Context context, File firstFile,  File outputAndSecondFile) throws IOException {
+    public static File mergeFiles(Context context, File firstFile,  File outputAndSecondFile) throws IOException, MalformedHtmlException {
      String firstFileContent=extractDataRowsFromFileOldVersion(firstFile);
       String finalContent=  FileManagerDesktop.readFileContenFromFile(outputAndSecondFile);
         finalContent= addNewRowToHtml(finalContent,firstFileContent);
