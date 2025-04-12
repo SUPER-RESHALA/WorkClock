@@ -8,6 +8,7 @@ import android.util.Log;
 import com.simurg.workclock.FileCollector;
 import com.simurg.workclock.data.DateTimeManager;
 import com.simurg.workclock.entity.Employee;
+import com.simurg.workclock.exception.MalformedHtmlException;
 import com.simurg.workclock.log.FileLogger;
 import com.simurg.workclock.template.HtmlEditor;
 
@@ -288,19 +289,26 @@ public class FileManagerDesktop {
         File subdivisionFolder = createCustomFolder(monthYearFolder,subdivision);
         File htmlFile= new File(subdivisionFolder,code+".html");
         HtmlEditor htmlEditor = new HtmlEditor(context,"template.html");
-        if (!htmlFile.exists()){
-            String template= htmlEditor.loadTemplate();
-            String finalContent = htmlEditor.addNewRowToHtml(template,code,currentDate,currentTime,note);
-            htmlFile = createFileInCustomFolder(subdivisionFolder,htmlFile.getName(),finalContent);
-        }else {
-            String htmlFileContent= readFileContenFromFile(htmlFile);
-            //System.out.println(htmlFileContent);
-            if (htmlFileContent==null|| htmlFileContent.isEmpty()){
-                FileLogger.logError("createTempFileforQueue", "htmlFileContent is null "+ htmlFileContent);
+        try{
+            if (!htmlFile.exists()){
+                String template= htmlEditor.loadTemplate();
+                String finalContent = htmlEditor.addNewRowToHtml(template,code,currentDate,currentTime,note);
+                htmlFile = createFileInCustomFolder(subdivisionFolder,htmlFile.getName(),finalContent);
+            }else {
+                String htmlFileContent= readFileContenFromFile(htmlFile);
+                //System.out.println(htmlFileContent);
+                if (htmlFileContent==null|| htmlFileContent.isEmpty()){
+                    FileLogger.logError("createTempFileforQueue", "htmlFileContent is null "+ htmlFileContent);
+                }
+                String finalContent= htmlEditor.addNewRowToHtml(htmlFileContent,code,currentDate,currentTime,note);
+                htmlFile = createFileInCustomFolder(subdivisionFolder,htmlFile.getName(),finalContent);
             }
-            String finalContent= htmlEditor.addNewRowToHtml(htmlFileContent,code,currentDate,currentTime,note);
+        }catch (MalformedHtmlException e){
+            String template= htmlEditor.loadTemplate();
+            String finalContent = htmlEditor.addNewRowToHtmlNoThrows(template,code,currentDate,currentTime,note);
             htmlFile = createFileInCustomFolder(subdivisionFolder,htmlFile.getName(),finalContent);
         }
+
         return htmlFile;
     }
 
@@ -319,18 +327,24 @@ public class FileManagerDesktop {
       File subdivisionFolder = createCustomFolder(monthYearFolder,subdivision);
       File htmlFile= new File(subdivisionFolder,code+".html");
      HtmlEditor htmlEditor = new HtmlEditor(context,"template.html");
-      if (!htmlFile.exists()){
+     try{
+         if (!htmlFile.exists()){
+             String template= htmlEditor.loadTemplate();
+             String finalContent = htmlEditor.addNewRowToHtml(template,code,currentDate,currentTime,note);
+             htmlFile = createFileInCustomFolder(subdivisionFolder,htmlFile.getName(),finalContent);
+         }else {
+             String htmlFileContent= readFileContenFromFile(htmlFile);
+             if (htmlFileContent==null|| htmlFileContent.isEmpty()){
+                 FileLogger.logError("createTempFile", "htmlFileContent is null "+ htmlFileContent);
+             }
+             String finalContent= htmlEditor.addNewRowToHtml(htmlFileContent,code,currentDate,currentTime,note);
+             htmlFile = createFileInCustomFolder(subdivisionFolder,htmlFile.getName(),finalContent);
+         }
+     }catch (MalformedHtmlException e){
          String template= htmlEditor.loadTemplate();
-         String finalContent = htmlEditor.addNewRowToHtml(template,code,currentDate,currentTime,note);
+         String finalContent = htmlEditor.addNewRowToHtmlNoThrows(template,code,currentDate,currentTime,note);
          htmlFile = createFileInCustomFolder(subdivisionFolder,htmlFile.getName(),finalContent);
-      }else {
-         String htmlFileContent= readFileContenFromFile(htmlFile);
-          if (htmlFileContent==null|| htmlFileContent.isEmpty()){
-              FileLogger.logError("createTempFile", "htmlFileContent is null "+ htmlFileContent);
-          }
-         String finalContent= htmlEditor.addNewRowToHtml(htmlFileContent,code,currentDate,currentTime,note);
-          htmlFile = createFileInCustomFolder(subdivisionFolder,htmlFile.getName(),finalContent);
-      }
+     }
      return htmlFile;
  }
 

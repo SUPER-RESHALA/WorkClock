@@ -55,7 +55,7 @@ public class HtmlEditor {
     }
 
     // Метод для добавления данных в HTML
-    public String addNewRowToHtml(String finalContent, String code, String date, String time, String note) {
+    public String addNewRowToHtml(String finalContent, String code, String date, String time, String note) throws MalformedHtmlException {
         // Формируем строку, которую добавим в таблицу
         String newRow = String.format(
                 "<tr>\n" +
@@ -68,11 +68,31 @@ public class HtmlEditor {
         );
 int indexOfTableTag=finalContent.indexOf("</table>");
         if (indexOfTableTag == -1) {
-            FileLogger.logError("addNewRowToHtml", "HTML content does not contain </table> tag "+ finalContent+"    CODE:"+code);
-            throw new IllegalArgumentException("HTML content does not contain </table> tag");
-        }
+            FileLogger.logError("addNewRowToHtml(code, date time,note)", "HTML content does not contain </table> tag "+ finalContent+"    CODE:"+code);
+            throw new MalformedHtmlException("HTML content does not contain </table> tag");
+                    }
 StringBuilder stringBuilder=new StringBuilder(finalContent);
 stringBuilder.insert(indexOfTableTag,newRow);
+        return stringBuilder.toString();
+    }
+    public String addNewRowToHtmlNoThrows(String finalContent, String code, String date, String time, String note){
+        // Формируем строку, которую добавим в таблицу
+        String newRow = String.format(
+                "<tr>\n" +
+                        "    <td>%s</td>\n" +
+                        "    <td>%s</td>\n" +
+                        "    <td>%s</td>\n" +
+                        "    <td>%s</td>\n" +
+                        "</tr>\n",
+                code, date, time, note
+        );
+        int indexOfTableTag=finalContent.indexOf("</table>");
+        if (indexOfTableTag == -1) {
+            FileLogger.logError("addNewRowToHtml", "HTML content does not contain </table> tag "+ finalContent+"    CODE:"+code);
+            throw new RuntimeException("HTML content does not contain </table> tag RUNTIME");
+        }
+        StringBuilder stringBuilder=new StringBuilder(finalContent);
+        stringBuilder.insert(indexOfTableTag,newRow);
         return stringBuilder.toString();
     }
     public static String addNewRowToHtml(String finalContent,String rowsToAdd) throws MalformedHtmlException {
