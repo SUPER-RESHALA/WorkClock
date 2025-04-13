@@ -33,15 +33,15 @@ import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
 
 public class FTPThreadTasks {
-    public static synchronized void checkCardFileModify(Context context, CsvReader csvReader) {
+    public static synchronized void checkCardFileModify(Context context, CsvReader csvReader, FTPConnectionManager ftpConnectionManager, FTPFileManager ftpFileManager) {
 
 String TAG="checkCardFileModify";
      int replyCode;
          String remoteFileName = "cards.csv";
     // String remoteFilePath = "/settings/cards.csv"; // Абсолютный путь к файлу на сервере
      String localFolderName = "WorkClockFiles"; // Локальная папка для хранения файла
-         FTPConnectionManager ftpConnectionManager = new FTPConnectionManager();
-         FTPFileManager ftpFileManager = new FTPFileManager(ftpConnectionManager.getFtpClient());
+//         FTPConnectionManager ftpConnectionManager = new FTPConnectionManager();
+//         FTPFileManager ftpFileManager = new FTPFileManager(ftpConnectionManager.getFtpClient());
      ftpConnectionManager.getFtpClient().enterLocalPassiveMode(); // Пассивный режим
 
     try {
@@ -116,17 +116,17 @@ String TAG="checkCardFileModify";
     }finally {
        // ftpConnectionManager.logout();
         //ftpConnectionManager.disconnect();
-        Log.i(TAG, "Соединение с FTP-сервером закрыто.");
+        // Log.i(TAG, "Соединение с FTP-сервером закрыто.");
         if (csvReader.checkIsUpdating()){csvReader.finishUpdate();}
 
     }
  }
 
-    public static synchronized void sendFileToFtp(Context context, String localFolderName, DateTimeManager dateTimeManager) throws InterruptedException {
+    public static synchronized void sendFileToFtp(Context context, String localFolderName, DateTimeManager dateTimeManager, FTPConnectionManager ftpConnectionManager, FTPFileManager ftpFileManager) throws InterruptedException {
         if (NetworkUtils.isNetworkConnected(context)) {
             new Thread(() -> {
-                FTPConnectionManager ftpConnectionManager = new FTPConnectionManager();
-                FTPFileManager ftpFileManager =new FTPFileManager(ftpConnectionManager.getFtpClient());
+//                FTPConnectionManager ftpConnectionManager = new FTPConnectionManager();
+//                FTPFileManager ftpFileManager =new FTPFileManager(ftpConnectionManager.getFtpClient());
                 try {
                      File idFile= new File(context.getExternalFilesDir(null),localFolderName+"/id.txt");
                      if (!idFile.exists()){
@@ -173,9 +173,9 @@ String TAG="checkCardFileModify";
             FileLogger.logError("SendFileTOftp", "No INTERNET");
         }
     }
-    public static boolean uploadErrorFile(Context context, DateTimeManager dateTimeManager) {
-        FTPConnectionManager ftpConnectionManager = new FTPConnectionManager();
-        FTPFileManager ftpFileManager = new FTPFileManager(ftpConnectionManager.getFtpClient());
+    public static boolean uploadErrorFile(Context context, DateTimeManager dateTimeManager, FTPConnectionManager ftpConnectionManager, FTPFileManager ftpFileManager) {
+//        FTPConnectionManager ftpConnectionManager = new FTPConnectionManager();
+//        FTPFileManager ftpFileManager = new FTPFileManager(ftpConnectionManager.getFtpClient());
         String mainFolderName = "WorkClockFiles";
         String currentYear = dateTimeManager.getYear();
         String currentMonthYear = dateTimeManager.getFormattedMonthYear();
@@ -249,9 +249,9 @@ if (!errorFile.exists()|| errorFile.length()==0){
       //  }
     }
 
-    public static void uploadAllTmpWithValidation(Context context, DateTimeManager dateTimeManager) {
-        FTPConnectionManager ftpConnectionManager = new FTPConnectionManager();
-        FTPFileManager ftpFileManager = new FTPFileManager(ftpConnectionManager.getFtpClient());
+    public static void uploadAllTmpWithValidation(Context context, DateTimeManager dateTimeManager, FTPConnectionManager ftpConnectionManager, FTPFileManager ftpFileManager) {
+//        FTPConnectionManager ftpConnectionManager = new FTPConnectionManager();
+//        FTPFileManager ftpFileManager = new FTPFileManager(ftpConnectionManager.getFtpClient());
         String mainFolderName = "WorkClockFiles";
         String currentYear = dateTimeManager.getYear();
         String currentMonthYear = dateTimeManager.getFormattedMonthYear();
@@ -321,11 +321,11 @@ if (!errorFile.exists()|| errorFile.length()==0){
         FileManagerDesktop.deleteAllTmp(context, dateTimeManager);
     }
 
-    public static Runnable cardTask(Activity activity, Context context, CsvReader csvReader) {
+    public static Runnable cardTask(Activity activity, Context context, CsvReader csvReader, FTPConnectionManager ftpConnectionManager, FTPFileManager ftpFileManager) {
         return () -> {
             if (NetworkUtils.isNetworkConnected(context)){
               //  new Thread(() -> {
-                    checkCardFileModify(context,csvReader);
+                    checkCardFileModify(context,csvReader,ftpConnectionManager,ftpFileManager);
               //  }).start();
 
             }else {
@@ -343,7 +343,11 @@ if (!errorFile.exists()|| errorFile.length()==0){
 
         };
     }
-    public static Runnable uploadTmpAndErrorTask(Activity activity, Context context, DateTimeManager dateTimeManager, DataQueueManager dataQueueManager, RFIDHandler rfidHandler, CsvReader csvReader, String mainFolderName, File mainFolder ) {
+    public static Runnable uploadTmpAndErrorTask(Activity activity, Context context, DateTimeManager dateTimeManager,
+                                                 DataQueueManager dataQueueManager, RFIDHandler rfidHandler,
+                                                 CsvReader csvReader, String mainFolderName, File mainFolder,
+                                                 FTPConnectionManager fcmForTmp, FTPFileManager ffmForTmp,
+                                                 FTPConnectionManager fcmForErr, FTPFileManager ffmForErr) {
         return () -> {
             if (NetworkUtils.isNetworkConnected(context)){
             //    new Thread(()->{
@@ -356,8 +360,8 @@ if (!errorFile.exists()|| errorFile.length()==0){
                             }
                         });
                         dataQueueManager.startSync();
-                        uploadAllTmpWithValidation(context,dateTimeManager);
-                        uploadErrorFile(context,dateTimeManager);
+                        uploadAllTmpWithValidation(context,dateTimeManager,fcmForTmp,ffmForTmp);
+                        uploadErrorFile(context,dateTimeManager,fcmForErr,ffmForErr);
                     } catch (RuntimeException e) {
                         FileLogger.logError("uploadTmpAndErrorTask", "Exception   "+ e.getMessage()+"    "+ Log.getStackTraceString(e));
                         //throw new RuntimeException(e);
