@@ -486,6 +486,10 @@ if (allTmpFiles.isEmpty()){
             return false;
         }
 
+        if (originalFile.getName().equals(newFileName)) {
+            FileLogger.log("renameFileWithReplace", "Original and new file names are the same. Skipping rename.");
+            return true; // или false, если ты хочешь считать это ошибкой
+        }
         // Получаем родительскую директорию исходного файла
         File parentDir = originalFile.getParentFile();
 
@@ -555,9 +559,58 @@ if (allTmpFiles.isEmpty()){
 
         return allRenamedSuccessfully;
     }
+public static File replaceFileWithoutLocal(File file) {
+String newFileName=file.getName().replace("local","");
+FileManagerDesktop.renameFileWithReplace(file.getAbsolutePath(),newFileName);
+return new File(file.getParent(),newFileName);
+}
+public  static  File rewriteFileWithData(File file, Context context) throws IOException, MalformedHtmlException {
+    HtmlEditor htmlEditor =new HtmlEditor(context, "template.html");
+    String data =HtmlEditor.extractDataRowsFromFileOldVersion(file);//i/o
+    String template=htmlEditor.loadTemplate();
+ String finalContent=HtmlEditor.addNewRowToHtml(template,data);//malformed
+    String basePath = context.getExternalFilesDir(null).getAbsolutePath();
+    String relativePath = file.getParent().replace(basePath, "");
+    if (relativePath.startsWith("/")) {
+        relativePath = relativePath.substring(1);
+    }
+    htmlEditor.saveToCustomFolder(finalContent, file.getName(), context, relativePath);
+// htmlEditor.saveToCustomFolder(finalContent,file.getName(), context,file.getParent());
+ return file;
+}
 
+public static void rewriteOrDelFile(File file,Context context){
+        try{
+            rewriteFileWithData(file,context);
+        }catch (IOException|MalformedHtmlException e){
+            FileManagerDesktop.deleteFile(file);
+        }
+        }
 
+    public static void rewriteOrDelAllFiles(File mainFolder, Context context, DateTimeManager dateTimeManager) {
+        String currentYear = dateTimeManager.getYear() + "/";
+        String currentMonthYear = dateTimeManager.getFormattedMonthYear() + "/";
+        String path = currentYear + currentMonthYear;
 
+        File mainTmpFolder = new File(mainFolder, path);
+        // Собираем все файлы рекурсивно
+        List<File> allFiles = FileCollector.collectOnlyFiles(mainTmpFolder);
+
+        if (allFiles.isEmpty()) {
+            FileLogger.log("rewriteOrDelAllFiles", "No files found in " + mainTmpFolder.getAbsolutePath());
+            return;
+        }
+
+        for (File file : allFiles) {
+            try {
+                FileLogger.log("rewriteOrDelAllFiles", "Trying to rewrite: " + file.getAbsolutePath());
+                rewriteFileWithData(file, context);  // Пытаемся переписать
+            } catch (IOException | MalformedHtmlException e) {
+                FileLogger.logError("rewriteOrDelAllFiles", "Rewrite failed, deleting file: " + file.getAbsolutePath() + " — " + e.getMessage());
+                FileManagerDesktop.deleteFile(file);  // Удаляем при ошибке
+            }
+        }
+    }
 
 
     // public static void renameWith

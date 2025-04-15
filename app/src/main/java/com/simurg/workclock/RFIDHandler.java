@@ -27,7 +27,7 @@ public class RFIDHandler {
     Map<String, Employee> map;
     private HashMap<String, Long> tokenScanTimes = new HashMap<>();
     // Константа для времени в миллисекундах (60 секунд)
-    private static final long COOLDOWN_TIME = 60 * 1000;
+   private static final long COOLDOWN_TIME = 60 * 1000;
     public void RFIDInputHandler(EditText rfidNumber, Activity activity, DateTimeManager dateTimeManager, String mainFolderName, File mainFolder, CsvReader csvReader, DataQueueManager dataQueueManager){
         rfidNumber.setOnEditorActionListener((v, actionId, event) -> {
             // Проверяем, что нажата клавиша Enter или действие "Done"

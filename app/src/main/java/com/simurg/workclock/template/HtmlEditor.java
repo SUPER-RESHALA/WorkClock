@@ -170,19 +170,21 @@ stringBuilder.insert(indexOfTableTag,newRow);
     public void saveToCustomFolder(String htmlContent, String outputFileName, Context context, String customFolderName) {
         File customFolder = createCustomFolder(context, customFolderName);
         if (customFolder == null) {
-            Log.e("FileManager", "Папка не была создана, сохранение файла невозможно.");
+            FileLogger.logError("FileManager", "Dir not create, saving file is impossible");
+            //Log.e("FileManager", "Папка не была создана, сохранение файла невозможно.");
             return;
         }
 
         File outputFile = new File(customFolder, outputFileName); // Сохраняем в пользовательскую папку
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
             writer.write(htmlContent);
-            Log.i("FileManager", "Файл успешно сохранен: " + outputFile.getAbsolutePath());
+            FileLogger.log("FileManager", "Successfully file save: " + outputFile.getAbsolutePath());
+           // Log.i("FileManager", "Файл успешно сохранен: " + outputFile.getAbsolutePath());
         } catch (IOException e) {
-            Log.e("FileManager", "Ошибка при сохранении файла: " + e.getMessage());
+            FileLogger.logError("FileManager","Error saving file: " + e.getMessage() );
+            //Log.e("FileManager", "Ошибка при сохранении файла: " + e.getMessage());
         }
 
     }
-
 
 }//END OF CLASS

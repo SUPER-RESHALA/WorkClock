@@ -118,6 +118,22 @@ public class FTPConnectionManager {
         Log.e(TAG , " [ERROR]: " + message);
     }
 
+public boolean reconnect(String hostname, String user, String password){
+        if (!isConnected){
+            connect(hostname);
+       return     login(user,password);
+        }
+        return true;
+}
+    public boolean reconnect(){
+        if (!isConnected){
+            Log.e("Connect", "Go to connect not connected");
+            connect(hostname);
+            return  login(user,password);
+        }
+        return true;
+    }
+
     public FTPClient getFtpClient() {
         return ftpClient;
     }

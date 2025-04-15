@@ -121,6 +121,7 @@ public static AtomicInteger logNumber;
         dateMain.setText(dateTimeManager.getFormattedDate());
          rfidHandler = new RFIDHandler();
          FileManagerDesktop.renameAllTmpWithReplace(mainFolder,dateTimeManager);
+         FileManagerDesktop.rewriteOrDelAllFiles(mainFolder,this,dateTimeManager);
         // FileManagerDesktop.deleteAllTmp(this,dateTimeManager);
         rfidHandler.RFIDInputHandler(rfidNumber, this, dateTimeManager,mainFolderName, mainFolder, csvReader,dataQueueManager);
         handler = new Handler();
@@ -217,25 +218,27 @@ public static AtomicInteger logNumber;
         if (mainSheduler != null && !mainSheduler.isShutdown()) {
             mainSheduler.shutdown();
         }
+new Thread(()->{
+    if (fcmForCard!=null &&fcmForCard.isConnected()){
+        fcmForCard.logout();
+        fcmForCard.disconnect();
+    }
+    if (fcmForTmp != null && fcmForTmp.isConnected()) {
+        fcmForTmp.logout();
+        fcmForTmp.disconnect();
+    }
 
-        if (fcmForCard!=null &&fcmForCard.isConnected()){
-            fcmForCard.logout();
-            fcmForCard.disconnect();
-        }
-        if (fcmForTmp != null && fcmForTmp.isConnected()) {
-            fcmForTmp.logout();
-            fcmForTmp.disconnect();
-        }
+    if (fcmForErr != null && fcmForErr.isConnected()) {
+        fcmForErr.logout();
+        fcmForErr.disconnect();
+    }
 
-        if (fcmForErr != null && fcmForErr.isConnected()) {
-            fcmForErr.logout();
-            fcmForErr.disconnect();
-        }
+    if (fcmForMinute != null && fcmForMinute.isConnected()) {
+        fcmForMinute.logout();
+        fcmForMinute.disconnect();
+    }
+}).start();
 
-        if (fcmForMinute != null && fcmForMinute.isConnected()) {
-            fcmForMinute.logout();
-            fcmForMinute.disconnect();
-        }
     }
 
     public synchronized void startUploadingFileEveryMinute(Context context,  String localFolderName, DateTimeManager dateTimeManager, ScheduledExecutorService scheduler, FTPConnectionManager ftpConnectionManager, FTPFileManager ftpFileManager) {
