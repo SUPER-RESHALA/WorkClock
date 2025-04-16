@@ -118,7 +118,7 @@ String TAG="checkCardFileModify";
             FileLogger.logError(TAG, "No server file "+ remoteFileName);
         }
     } catch (IOException e) {
-        FileLogger.logError(TAG, "Error checking card or download "+ e.getMessage()+"   "+ Log.getStackTraceString(e));
+        FileLogger.logError(TAG, "Error checking card or download "+ e.getMessage()+"   "+ Log.getStackTraceString(e)+ "Reply code: "+ ftpConnectionManager.getFtpClient().getReplyCode());
         if (csvReader.checkIsUpdating()){csvReader.finishUpdate();}
 
     }finally {
@@ -173,7 +173,7 @@ String TAG="checkCardFileModify";
                         FileLogger.logError("sendFileToFTP", "Error uploadFile "+ localFile.getName());
                     }
                 } catch (Exception e) {
-                    FileLogger.logError("sendToFTP"," Error Ftp "+ e.getMessage()+"     "+Log.getStackTraceString(e));
+                    FileLogger.logError("sendToFTP"," Error Ftp "+ e.getMessage()+"     "+Log.getStackTraceString(e)+" Reply code: "+ ftpConnectionManager.getFtpClient().getReplyCode());
                 }
             }).start();
 
@@ -249,7 +249,7 @@ if (!errorFile.exists()|| errorFile.length()==0){
             return success;
 
         } catch (Exception e) {
-            FileLogger.logError("uploadErrorFile", "Error upload file  "+ e.getMessage()+ "     "+Log.getStackTraceString(e));
+            FileLogger.logError("uploadErrorFile", "Error upload file  "+ e.getMessage()+ "     "+Log.getStackTraceString(e)+ "Reply code: "+ ftpConnectionManager.getFtpClient().getReplyCode());
            if (localErrorFile.exists()){FileManagerDesktop.deleteFile(localErrorFile);}
            return false;
            //OR EXCEPTION
@@ -344,7 +344,7 @@ if (!errorFile.exists()|| errorFile.length()==0){
             }
 
         } catch (IOException e) {
-            FileLogger.logError("uploadAllTmpWithValid", "Enter to catch block IO");
+            FileLogger.logError("uploadAllTmpWithValid", "Enter to catch block IO Reply code: "+ ftpConnectionManager.getFtpClient().getReplyCode());
             if (!ftpConnectionManager.isConnected()){
                 ftpConnectionManager.connect(FTPConnectionManager.hostname);
                 ftpConnectionManager.login(FTPConnectionManager.user, FTPConnectionManager.password);

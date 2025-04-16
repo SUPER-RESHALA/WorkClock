@@ -103,13 +103,8 @@ public class FTPFileManager {
     /**
      * Получение текущей рабочей директории.
      */
-    public String getCurrentWorkingDirectory() {
-        try {
+    public String getCurrentWorkingDirectory() throws IOException {
             return ftpClient.printWorkingDirectory();
-        } catch (IOException e) {
-            FileLogger.logError("getCurrentWorkingDirectory", "error get current work dir "+ e.getMessage()+ "    "+ Log.getStackTraceString(e));
-            return null;
-        }
     }
 
 
@@ -122,15 +117,11 @@ public class FTPFileManager {
     /**
      * Навигация к родительской директории.
      */
-    public boolean navigateToParentDirectory() {
-        try {
+    public boolean navigateToParentDirectory() throws IOException {
+
             boolean success = ftpClient.changeToParentDirectory();
            FileLogger.log("navigateToParentDirectory", " navigToParDir"+success);
             return success;
-        } catch (IOException e) {
-            FileLogger.logError("navigateToParentDirectory", "Error navigateToParDir "+e.getMessage()+"  "+ Log.getStackTraceString(e));
-            return false;
-        }
     }
 
     /**
@@ -176,7 +167,7 @@ public class FTPFileManager {
         return true; // Успешно перешли в конечную директорию
     }
 
-public boolean moveCurrentDir(FTPFileManager ftpFileManager, String path) {
+public boolean moveCurrentDir(FTPFileManager ftpFileManager, String path) throws IOException {
         if (!Objects.equals(ftpFileManager.getCurrentWorkingDirectory(),path)){
           ftpFileManager.navigateToParentDirectory();
           if (!ensureAndChangeToDirectory(ftpFileManager,path)){
