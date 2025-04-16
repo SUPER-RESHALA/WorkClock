@@ -84,7 +84,13 @@ String TAG="checkCardFileModify";
                 FileLogger.log(TAG,"The local file is different from the file on the server. Replacing ");
                 csvReader.startUpdate();
                 try (BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(localFile))) {
+                   if (!ftpConnectionManager.isConnected()){
                     ftpConnectionManager.reconnect();
+                       if (!Objects.equals(ftpFileManager.getCurrentWorkingDirectory(), "settings/")){
+                           ftpFileManager.navigateToParentDirectory();
+                           ftpFileManager.changeWorkingDirectory("settings/");
+                       }
+                   }
                     if (ftpConnectionManager.getFtpClient().retrieveFile(remoteFileName, outputStream)) {
                         FileLogger.log(TAG,"File updating success "+ localFile.getAbsolutePath());
                         csvReader.finishUpdate();
@@ -209,7 +215,10 @@ if (!errorFile.exists()|| errorFile.length()==0){
             while (true) {
                 if (ftpFileManager.fileExists(errorFile.getName())) {
                     fileContent=FileManagerDesktop.readFileContenFromFile(errorFile);
-                    ftpConnectionManager.reconnect();
+                    if (!ftpConnectionManager.isConnected()) {
+                        ftpConnectionManager.reconnect();
+                        ftpFileManager.moveCurrentDir(ftpFileManager, ftpMonthDir);
+                    }
                     // Шаг 1: Скачать файл и зафиксировать размер
                     ftpFileManager.downloadFile(errorFile.getName(), localErrorFile.getAbsolutePath());
                     long remoteFileSizeBefore = localErrorFile.length();
@@ -294,19 +303,30 @@ if (!errorFile.exists()|| errorFile.length()==0){
               FileManagerDesktop.renameFile(currentFile.getAbsolutePath(), localFileName);
                     // Первый скачанный размер файла
                     long initialServerFileSize = ftpFileManager.getFileSize(fileName,ftpConnectionManager.getFtpClient());
-                    ftpConnectionManager.reconnect();
-                 ftpFileManager.downloadFile(fileName, mergedFile.getAbsolutePath());
+                    if (!ftpConnectionManager.isConnected()) {
+                        ftpConnectionManager.reconnect();
+                        ftpFileManager.moveCurrentDir(ftpFileManager, fullPath);
+                    }
+                    ftpFileManager.downloadFile(fileName, mergedFile.getAbsolutePath());
                     HtmlEditor.mergeFiles(context, localFile, mergedFile);
                     while (true) {
                         long currentServerFileSize = ftpFileManager.getFileSize(fileName,ftpConnectionManager.getFtpClient());
                         if (currentServerFileSize != initialServerFileSize) {
-                            ftpConnectionManager.reconnect();
+                            if (!ftpConnectionManager.isConnected()) {
+                                ftpConnectionManager.reconnect();
+                                ftpFileManager.moveCurrentDir(ftpFileManager, fullPath);
+                            }
+
                             // Серверный файл изменился, повторяем скачивание и склейку
                             ftpFileManager.downloadFile(fileName, mergedFile.getAbsolutePath());
                             HtmlEditor.mergeFiles(context, localFile, mergedFile);
                             initialServerFileSize = currentServerFileSize; // Обновляем эталонный вес
                         } else {
-                            ftpConnectionManager.reconnect();
+                            if (!ftpConnectionManager.isConnected()) {
+                                ftpConnectionManager.reconnect();
+                                ftpFileManager.moveCurrentDir(ftpFileManager, fullPath);
+                            }
+
                             // Серверный файл не изменился, загружаем обновленный файл
                             ftpFileManager.uploadFile(mergedFile.getAbsolutePath());
                             break;
@@ -314,17 +334,27 @@ if (!errorFile.exists()|| errorFile.length()==0){
                     }
 
                 } else {
+                    if (!ftpConnectionManager.isConnected()) {
+                        ftpConnectionManager.reconnect();
+                        ftpFileManager.moveCurrentDir(ftpFileManager, fullPath);
+                    }
                     // Файл отсутствует на сервере, загружаем
                     ftpFileManager.uploadFile(currentFile.getAbsolutePath());
                 }
             }
 
         } catch (IOException e) {
+            FileLogger.logError("uploadAllTmpWithValid", "Enter to catch block IO");
+            if (!ftpConnectionManager.isConnected()){
+                ftpConnectionManager.connect(FTPConnectionManager.hostname);
+                ftpConnectionManager.login(FTPConnectionManager.user, FTPConnectionManager.password);
+            }
             allFilesUploaded=false;
             boolean isRenamed= FileManagerDesktop.renameAllTmpWithReplace(new File(baseDir,mainFolderName),dateTimeManager);
             FileLogger.logError("uploadAllTmpWithValid", "IsRenamed:  "+isRenamed+"        "+e.getMessage());
 
                  }catch (MalformedHtmlException e){
+            FileLogger.logError("uploadAllTmpWithValid", "Enter to catch block  Malformed");
             allFilesUploaded=false;
             try {
               File  currentFile=  FileManagerDesktop.replaceFileWithoutLocal(localFile);

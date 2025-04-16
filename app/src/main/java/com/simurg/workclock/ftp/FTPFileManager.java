@@ -149,9 +149,8 @@ public class FTPFileManager {
      * @param ftpFileManager объект FTPFileManager для работы с сервером.
      * @param fullPath полный путь к директории (например, "2024/12.2024").
      * @return true, если успешно перешёл в директорию; false, если возникла ошибка.
-     * @throws IOException если произошла ошибка при создании директории.
      */
-    public boolean ensureAndChangeToDirectory(FTPFileManager ftpFileManager, String fullPath) throws IOException {
+    public boolean ensureAndChangeToDirectory(FTPFileManager ftpFileManager, String fullPath)  {
         String[] directories = fullPath.split("/"); // Разбиваем путь на компоненты
         String currentPath = "";
 
@@ -177,7 +176,7 @@ public class FTPFileManager {
         return true; // Успешно перешли в конечную директорию
     }
 
-public boolean moveCurrentDir(FTPFileManager ftpFileManager, String path) throws IOException {
+public boolean moveCurrentDir(FTPFileManager ftpFileManager, String path) {
         if (!Objects.equals(ftpFileManager.getCurrentWorkingDirectory(),path)){
           ftpFileManager.navigateToParentDirectory();
           if (!ensureAndChangeToDirectory(ftpFileManager,path)){

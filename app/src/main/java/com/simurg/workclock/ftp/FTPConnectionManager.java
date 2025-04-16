@@ -133,7 +133,9 @@ public boolean reconnect(String hostname, String user, String password){
         }
         return true;
     }
-
+public boolean noOp() throws IOException {
+         return ftpClient.sendNoOp();
+}
     public FTPClient getFtpClient() {
         return ftpClient;
     }
