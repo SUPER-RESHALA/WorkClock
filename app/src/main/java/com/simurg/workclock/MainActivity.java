@@ -54,21 +54,12 @@ public class MainActivity extends AppCompatActivity {
     private ThreadManager threadManager;
     private Handler handler;
     private Runnable timeUpdater;
-
-    private FTPConnectionManager fcmForTmp;
-    private FTPConnectionManager fcmForErr;
-    private FTPConnectionManager fcmForMinute;
-    private FTPConnectionManager fcmForCard;
     private ScheduledExecutorService scheduler;
     private static String mainFolderName = "WorkClockFiles";
     private ScheduledExecutorService mainSheduler;
     DataQueueManager dataQueueManager;
     RFIDHandler rfidHandler;
     CsvReader csvReader;
-    private FTPFileManager ffmForTmp;
-    private FTPFileManager ffmForMinute;
-    private FTPFileManager ffmForCard;
-    private FTPFileManager ffmForErr;
     File mainFolder;
 public static AtomicInteger logNumber;
     @Override
@@ -90,18 +81,6 @@ public static AtomicInteger logNumber;
         }
         // Инициализация ActivityResultLauncher
       if (showDialog("WorkClockFiles", "id.txt")) {return;}
-        fcmForTmp = new FTPConnectionManager();
-        fcmForErr = new FTPConnectionManager();
-        fcmForMinute = new FTPConnectionManager();
-        fcmForCard = new FTPConnectionManager();
-        // Создание экземпляров FTPFileManager
-        ffmForTmp = new FTPFileManager(fcmForTmp.getFtpClient());
-        ffmForMinute = new FTPFileManager(fcmForMinute.getFtpClient());
-        ffmForCard = new FTPFileManager(fcmForCard.getFtpClient());
-        ffmForErr = new FTPFileManager(fcmForErr.getFtpClient());
-
-
-
         FileLogger.init(this);
         String filePath = this.getExternalFilesDir(null) + "/WorkClockFiles/cards.csv";
         File baseDir = this.getExternalFilesDir(null); // Базовая директория приложения
@@ -130,7 +109,7 @@ public static AtomicInteger logNumber;
       scheduler = Executors.newSingleThreadScheduledExecutor();
      // mainSheduler = Executors.newScheduledThreadPool(2);
 
-        startUploadingFileEveryMinute(this, "WorkClockFiles", dateTimeManager, scheduler,fcmForMinute,ffmForMinute);
+        startUploadingFileEveryMinute(this, "WorkClockFiles", dateTimeManager, scheduler);
 
 
 //FileManagerDesktop.renameAllTmpWithReplace(mainFolder,dateTimeManager);
@@ -158,8 +137,8 @@ public static AtomicInteger logNumber;
     }
 
     public void startMainTasks(Activity activity, Context context, DateTimeManager dateTimeManager, DataQueueManager dataQueueManager, RFIDHandler rfidHandler, CsvReader csvReader, String mainFolderName, File mainFolder){
-        mainSheduler.scheduleWithFixedDelay(FTPThreadTasks.cardTask(activity,context,csvReader,fcmForCard,ffmForCard),0,2,TimeUnit.MINUTES);
-        mainSheduler.scheduleWithFixedDelay(FTPThreadTasks.uploadTmpAndErrorTask(activity,context,dateTimeManager,dataQueueManager,rfidHandler,csvReader,mainFolderName,mainFolder,fcmForTmp,ffmForTmp,fcmForErr,ffmForErr),1,3,TimeUnit.MINUTES);
+        mainSheduler.scheduleWithFixedDelay(FTPThreadTasks.cardTask(activity,context,csvReader),0,2,TimeUnit.MINUTES);
+        mainSheduler.scheduleWithFixedDelay(FTPThreadTasks.uploadTmpAndErrorTask(activity,context,dateTimeManager,dataQueueManager,rfidHandler,csvReader,mainFolderName,mainFolder),1,3,TimeUnit.MINUTES);
 //        mainSheduler.scheduleWithFixedDelay(new Runnable() {
 //            @Override
 //            public void run() {
@@ -218,35 +197,14 @@ public static AtomicInteger logNumber;
         if (mainSheduler != null && !mainSheduler.isShutdown()) {
             mainSheduler.shutdown();
         }
-new Thread(()->{
-    if (fcmForCard!=null &&fcmForCard.isConnected()){
-        fcmForCard.logout();
-        fcmForCard.disconnect();
-    }
-    if (fcmForTmp != null && fcmForTmp.isConnected()) {
-        fcmForTmp.logout();
-        fcmForTmp.disconnect();
     }
 
-    if (fcmForErr != null && fcmForErr.isConnected()) {
-        fcmForErr.logout();
-        fcmForErr.disconnect();
-    }
-
-    if (fcmForMinute != null && fcmForMinute.isConnected()) {
-        fcmForMinute.logout();
-        fcmForMinute.disconnect();
-    }
-}).start();
-
-    }
-
-    public synchronized void startUploadingFileEveryMinute(Context context,  String localFolderName, DateTimeManager dateTimeManager, ScheduledExecutorService scheduler, FTPConnectionManager ftpConnectionManager, FTPFileManager ftpFileManager) {
+    public synchronized void startUploadingFileEveryMinute(Context context,  String localFolderName, DateTimeManager dateTimeManager, ScheduledExecutorService scheduler) {
         Runnable task = new Runnable() {
             @Override
             public void run() {
                 try {
-                    sendFileToFtp(context, localFolderName, dateTimeManager,ftpConnectionManager, ftpFileManager);
+                    sendFileToFtp(context, localFolderName, dateTimeManager);
                 } catch (InterruptedException e) {
                     FileLogger.logError("startUploadingFileEveryMinute", e.getMessage());
                     throw new RuntimeException(e);
