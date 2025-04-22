@@ -25,7 +25,7 @@ public class RFIDHandler {
     private long initCsvFileSize =-1;
     private File csvFile;
     Map<String, Employee> map;
-    private HashMap<String, Long> tokenScanTimes = new HashMap<>();
+    private final HashMap<String, Long> tokenScanTimes = new HashMap<>();
     // Константа для времени в миллисекундах (60 секунд)
    private static final long COOLDOWN_TIME = 60 * 1000;
     public void RFIDInputHandler(EditText rfidNumber, Activity activity, DateTimeManager dateTimeManager, String mainFolderName, File mainFolder, CsvReader csvReader, DataQueueManager dataQueueManager){
@@ -34,7 +34,7 @@ public class RFIDHandler {
             if (actionId == EditorInfo.IME_ACTION_DONE ||
                     (event != null && event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
 
-                String enteredText = rfidNumber.getText().toString(); // Получаем введённый текст
+                String enteredText = rfidNumber.getText().toString().trim(); // Получаем введённый текст
 
                 // Проверяем длину текста
                 if (enteredText.length() == 10) {
@@ -261,7 +261,7 @@ public class RFIDHandler {
 
     }
 
-    public boolean checkToken(String tokenId, Activity activity) {
+    public synchronized boolean checkToken(String tokenId, Activity activity) {
         long currentTime = System.currentTimeMillis();
         if (tokenScanTimes.containsKey(tokenId)) {
             long lastScanTime = tokenScanTimes.get(tokenId);
